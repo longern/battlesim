@@ -11,6 +11,7 @@ class Card:
         self.name = "Unknown"
         self.divine_shield = False
         self.revive = False
+        self.poisoned = False
 
     def __repr__(self):
         return f"<Card({self.name}, {self.attack}, {self.health})>"
@@ -54,7 +55,7 @@ def pick_attacked_target(minions):
 def check_death(players: List[Player]):
     for player in players:
         for minion in player.minions[:]:
-            if minion.health <= 0:
+            if minion.health <= 0 or minion.poisoned:
                 minion_index = player.minions.index(minion)
                 player.minions.remove(minion)
                 if player.active_minion == minion:
@@ -104,8 +105,7 @@ def parse_battlefield(*player_minions_stats):
             minion = Card()
             minion.attack = attack
             minion.health = health
-            for arg in args:
-                if issubclass(arg, Keyword):
+            for arg in filter(lambda arg: issubclass(arg, Keyword), args):
                     setattr(minion, arg.as_attribute(), True)
             player.minions.append(minion)
         players.append(player)
