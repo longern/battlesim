@@ -10,8 +10,9 @@ class Card:
     def __init__(self):
         self.name = "Unknown"
         self.divine_shield = False
-        self.revive = False
         self.poisoned = False
+        self.revive = False
+        self.taunt = False
 
     def __repr__(self):
         return f"<Card({self.name}, {self.attack}, {self.health})>"
@@ -49,6 +50,8 @@ def attack(attacker, defender):
 
 
 def pick_attacked_target(minions):
+    if any(minion.taunt for minion in minions):
+        minions = [minion for minion in minions if minion.taunt]
     return random.choice(minions)
 
 
