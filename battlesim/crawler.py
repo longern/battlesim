@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import requests
 import json
+import pathlib
+import os
 
 
 def crawl_cards_data() -> dict:
@@ -9,7 +11,11 @@ def crawl_cards_data() -> dict:
         headers={"Authorization": "Bearer KR0TZFpUeCM5q4QdrFqKfgdRUk5Wgayl4M"},
     )
 
-    with open("cards.json", "w") as cards_data_file:
+    file_directory = pathlib.Path(__file__).parent
+    if not os.path.exists(file_directory / "downloads"):
+        os.mkdir(file_directory / "downloads")
+
+    with open(file_directory / "downloads/cards.json", "w") as cards_data_file:
         json.dump(response.json(), cards_data_file, indent=2)
 
 
