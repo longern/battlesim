@@ -3,8 +3,17 @@ from .event import register_action
 from random import choice, randrange
 
 
+def pick_attacked_target(minions):
+    if any(minion.taunt for minion in minions):
+        minions = [minion for minion in minions if minion.taunt]
+    return choice(minions)
+
+
 @register_action
-def attack(attacker, defender):
+def attack(attacker, defender=None):
+    if defender is None:
+        defender = pick_attacked_target(attacker.enemy_minions)
+
     deal_damage(attacker.attack, defender, source=attacker)
     deal_damage(defender.attack, attacker, source=defender)
 

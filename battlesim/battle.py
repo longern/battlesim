@@ -39,12 +39,6 @@ class Game:
             yield from player.minions
 
 
-def pick_attacked_target(minions):
-    if any(minion.taunt for minion in minions):
-        minions = [minion for minion in minions if minion.taunt]
-    return random.choice(minions)
-
-
 def check_death(game: Game):
     for player in game.players:
         for minion in player.minions[:]:
@@ -62,8 +56,8 @@ def check_death(game: Game):
 def battle(game: Game):
     for player in game.players:
         for minion in player.minions:
-            # minion.start_of_combat()
-            pass
+            if hasattr(minion, "start_of_combat"):
+                minion.start_of_combat()
 
     for player in game.players:
         player.active_minion = next(iter(player.minions), None)
@@ -77,7 +71,7 @@ def battle(game: Game):
     while any(player.has_attackable_minions for player in game.players):
         current_player = next(current_player_iter)
         opponent = next(filter(lambda player: player != current_player, game.players))
-        attack(current_player.active_minion, pick_attacked_target(opponent.minions))
+        attack(current_player.active_minion)
         check_death(game)
 
         if any(not player.minions for player in game.players):
@@ -115,5 +109,5 @@ battlefield_data = [(2, 2, 49279), (1, 1)], [(2, 6, Taunt), (1, 1)]
 battlefield = parse_battlefield(battlefield_data)
 from collections import Counter
 
-c = Counter(battle(parse_battlefield(battlefield_data)) for _ in range(100000))
+c = Counter(battle(parse_battlefield(battlefield_data)) for _ in range(10000))
 print(c)

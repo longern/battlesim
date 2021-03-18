@@ -57,3 +57,7 @@ class Card:
     @property
     def enemy_minions(self):
         return self.controller.opponent.minions
+
+    @property
+    def friendly_minions(self):
+        return [minion for minion in self.controller.minions if minion is not self]
