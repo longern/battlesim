@@ -11,6 +11,7 @@ class Card:
         self.name = "Unknown"
         self.divine_shield = False
         self.poisoned = False
+        self.poisonous = False
         self.revive = False
         self.taunt = False
 
@@ -33,7 +34,7 @@ def has_attackable_minions(player: Player):
     return any(minion.attack > 0 for minion in player.minions)
 
 
-def deal_damage(amount: int, card):
+def deal_damage(amount: int, card, source=None):
     if amount <= 0:
         return
 
@@ -43,10 +44,13 @@ def deal_damage(amount: int, card):
 
     card.health -= amount
 
+    if isinstance(source, Card) and source.poisonous:
+        card.poisoned = True
+
 
 def attack(attacker, defender):
-    deal_damage(attacker.attack, defender)
-    deal_damage(defender.attack, attacker)
+    deal_damage(attacker.attack, defender, source=attacker)
+    deal_damage(defender.attack, attacker, source=defender)
 
 
 def pick_attacked_target(minions):

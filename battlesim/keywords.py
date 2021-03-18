@@ -27,6 +27,10 @@ class Deathrattle(Keyword):
     keyword_id = 12
 
 
+class Poisonous(Keyword):
+    keyword_id = 32
+
+
 class Magnetic(Keyword):
     keyword_id = 66
 
