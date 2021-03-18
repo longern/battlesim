@@ -3,20 +3,8 @@ import random
 from itertools import cycle
 from typing import List
 
+from .card import Card
 from .keywords import *
-
-
-class Card:
-    def __init__(self):
-        self.name = "Unknown"
-        self.divine_shield = False
-        self.poisoned = False
-        self.poisonous = False
-        self.revive = False
-        self.taunt = False
-
-    def __repr__(self):
-        return f"<Card({self.name}, {self.attack}, {self.health})>"
 
 
 class Player:
@@ -121,9 +109,12 @@ def parse_battlefield(player_minions_stats) -> Game:
     for minions_stats in player_minions_stats:
         player = Player()
         for attack, health, *args in minions_stats:
-            minion = Card()
-            minion.attack = attack
-            minion.health = health
+            if args and isinstance(args[0], int):
+                card_id = args[0]
+                args.pop(0)
+                minion = Card.fromid(card_id, attack=attack, health=health)
+            else:
+                minion = Card(attack=attack, health=health)
             for arg in filter(lambda arg: issubclass(arg, Keyword), args):
                 setattr(minion, arg.as_attribute(), True)
             player.minions.append(minion)
