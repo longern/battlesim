@@ -2,13 +2,16 @@
 import random
 from itertools import cycle
 from typing import List
+from functools import cached_property
 
 from .card import Card
 from .keywords import *
+from .actions import *
 
 
 class Player:
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game
         self.hero = None
         self.minions: List[Card] = []
         self.active_minion = None
@@ -21,34 +24,19 @@ class Player:
     def has_attackable_minions(self):
         return any(minion.attack > 0 for minion in self.minions)
 
+    @cached_property
+    def opponent(self):
+        return next(filter(lambda player: player is not self, self.game.players), None)
+
 
 class Game:
     def __init__(self):
-        self.players: Player = []
+        self.players = [Player(self), Player(self)]
 
     @property
     def minions(self):
         for player in self.players:
             yield from player.minions
-
-
-def deal_damage(amount: int, card, source=None):
-    if amount <= 0:
-        return
-
-    if card.divine_shield:
-        card.divine_shield = False
-        return
-
-    card.health -= amount
-
-    if isinstance(source, Card) and source.poisonous:
-        card.poisoned = True
-
-
-def attack(attacker, defender):
-    deal_damage(attacker.attack, defender, source=attacker)
-    deal_damage(defender.attack, attacker, source=defender)
 
 
 def pick_attacked_target(minions):
@@ -63,6 +51,7 @@ def check_death(game: Game):
             if minion.health <= 0 or minion.poisoned:
                 minion_index = player.minions.index(minion)
                 player.minions.remove(minion)
+                die(minion)
                 if player.active_minion == minion:
                     if minion_index >= len(player.minions):
                         player.active_minion = player.first_minion
@@ -106,25 +95,25 @@ def battle(game: Game):
 
 def parse_battlefield(player_minions_stats) -> Game:
     game = Game()
-    for minions_stats in player_minions_stats:
-        player = Player()
+    for player, minions_stats in zip(game.players, player_minions_stats):
         for attack, health, *args in minions_stats:
             if args and isinstance(args[0], int):
-                card_id = args[0]
-                args.pop(0)
-                minion = Card.fromid(card_id, attack=attack, health=health)
+                card_id = args.pop(0)
+                minion = Card.fromid(
+                    card_id, attack=attack, health=health, controller=player
+                )
             else:
-                minion = Card(attack=attack, health=health)
+                minion = Card(attack=attack, health=health, controller=player)
             for arg in filter(lambda arg: issubclass(arg, Keyword), args):
                 setattr(minion, arg.as_attribute(), True)
             player.minions.append(minion)
-        game.players.append(player)
 
     return game
 
 
+battlefield_data = [(2, 2, 49279), (1, 1)], [(2, 6, Taunt), (1, 1)]
 battlefield = parse_battlefield(battlefield_data)
 from collections import Counter
 
-c = Counter(battle(parse_battlefield(battlefield_data)) for _ in range(10000))
+c = Counter(battle(parse_battlefield(battlefield_data)) for _ in range(100000))
 print(c)

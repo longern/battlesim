@@ -1,11 +1,11 @@
-import pathlib
 import json
+import logging
+import pathlib
 import re
 
-with open(
-    pathlib.Path(__file__).parent / "downloads/cards.json", "r"
-) as cards_data_file:
-    cards_data = json.load(cards_data_file)["cards"]
+cards_data_file_path = pathlib.Path(__file__).parent / "downloads/cards.json"
+with open(cards_data_file_path, "r") as cards_data_file:
+    cards_data = {card["id"]: card for card in json.load(cards_data_file)["cards"]}
 
 
 class Card:
@@ -26,19 +26,34 @@ class Card:
     @classmethod
     def fromid(cls, card_id: int, **kwargs):
         try:
-            card_data = next(filter(lambda card: card["id"] == card_id, cards_data))
-        except StopIteration:
+            card_data = cards_data[card_id]
+        except KeyError:
+            logging.error("Card %d not found.", card_id)
             return None
 
-        card = cls(**kwargs)
-        card.name = card_data["name"]
-        card.tier = card_data["battlegrounds"]["tier"]
+        # Load effect
+        from . import effects
+
+        words = re.sub("^\d+-", "", card_data["slug"]).split("-")
+        class_name = "".join(map(str.capitalize, words))
+        if hasattr(effects, class_name):
+            effect_class = getattr(effects, class_name)
+            cls = type(effect_class.__name__, (cls, effect_class), {})
+
+        kwargs.setdefault("attack", card_data["attack"])
+        kwargs.setdefault("health", card_data["health"])
+        kwargs["name"] = card_data["name"]
+        kwargs["tier"] = card_data["battlegrounds"]["tier"]
 
         # Load keywords from card text.
         text_match = re.match("^<b>[A-Za-z ]*</b>(?: |$)", card_data["text"])
         group = text_match.group() if text_match else ""
         keywords = re.findall("<b>([A-Za-z ]*)</b>", group)
         for keyword in keywords:
-            setattr(card, keyword.replace(" ", "_").lower(), True)
+            kwargs.setdefault(keyword.replace(" ", "_").lower(), True)
 
-        return card
+        return cls(**kwargs)
+
+    @property
+    def enemy_minions(self):
+        return self.controller.opponent.minions
