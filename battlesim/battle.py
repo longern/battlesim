@@ -103,11 +103,3 @@ def parse_battlefield(player_minions_stats) -> Game:
             player.minions.append(minion)
 
     return game
-
-
-battlefield_data = [(2, 2, 49279), (1, 1)], [(2, 6, Taunt), (1, 1)]
-battlefield = parse_battlefield(battlefield_data)
-from collections import Counter
-
-c = Counter(battle(parse_battlefield(battlefield_data)) for _ in range(10000))
-print(c)
