@@ -8,7 +8,7 @@ from .event import after, register_action, whenever
 
 cards_data_file_path = pathlib.Path(__file__).parent / "downloads/cards.json"
 with open(cards_data_file_path, "r") as cards_data_file:
-    cards_data = {card["id"]: card for card in json.load(cards_data_file)["cards"]}
+    cards_data = {card["id"]: card for card in json.load(cards_data_file)}
 
 
 def pick_attacked_target(minions):
