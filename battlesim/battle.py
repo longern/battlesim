@@ -6,7 +6,6 @@ from functools import cached_property
 
 from .card import Card
 from .keywords import *
-from .actions import *
 
 
 class Player:
@@ -22,7 +21,7 @@ class Player:
 
     @property
     def has_attackable_minions(self):
-        return any(minion.attack > 0 for minion in self.minions)
+        return any(minion.attack_power > 0 for minion in self.minions)
 
     @cached_property
     def opponent(self):
@@ -45,7 +44,7 @@ def check_death(game: Game):
             if minion.health <= 0 or minion.poisoned:
                 minion_index = player.minions.index(minion)
                 player.minions.remove(minion)
-                die(minion)
+                minion.die()
                 if player.active_minion == minion:
                     if minion_index >= len(player.minions):
                         player.active_minion = player.first_minion
@@ -71,7 +70,7 @@ def battle(game: Game):
     while any(player.has_attackable_minions for player in game.players):
         current_player = next(current_player_iter)
         opponent = next(filter(lambda player: player != current_player, game.players))
-        attack(current_player.active_minion)
+        current_player.active_minion.attack()
         check_death(game)
 
         if any(not player.minions for player in game.players):
@@ -94,10 +93,10 @@ def parse_battlefield(player_minions_stats) -> Game:
             if args and isinstance(args[0], int):
                 card_id = args.pop(0)
                 minion = Card.fromid(
-                    card_id, attack=attack, health=health, controller=player
+                    card_id, attack_power=attack, health=health, controller=player
                 )
             else:
-                minion = Card(attack=attack, health=health, controller=player)
+                minion = Card(attack_power=attack, health=health, controller=player)
             for arg in filter(lambda arg: issubclass(arg, Keyword), args):
                 setattr(minion, arg.as_attribute(), True)
             player.minions.append(minion)

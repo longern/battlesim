@@ -2,10 +2,19 @@ import json
 import logging
 import pathlib
 import re
+from random import choice
+
+from .event import after, register_action, whenever
 
 cards_data_file_path = pathlib.Path(__file__).parent / "downloads/cards.json"
 with open(cards_data_file_path, "r") as cards_data_file:
     cards_data = {card["id"]: card for card in json.load(cards_data_file)["cards"]}
+
+
+def pick_attacked_target(minions):
+    if any(minion.taunt for minion in minions):
+        minions = [minion for minion in minions if minion.taunt]
+    return choice(minions)
 
 
 class Card:
@@ -21,7 +30,52 @@ class Card:
             setattr(self, key, value)
 
     def __repr__(self):
-        return f"<Card({self.name}, {self.attack}, {self.health})>"
+        return f"<Card({self.name}, {self.attack_power}, {self.health})>"
+
+    @register_action
+    def attack(self, defender=None):
+        if defender is None:
+            defender = pick_attacked_target(self.enemy_minions)
+
+        self.deal_damage(self.attack_power, defender)
+        defender.deal_damage(defender.attack_power, self)
+
+    @register_action
+    def deal_damage(self, amount: int, card: "Card"):
+        if amount <= 0:
+            return
+
+        if card.divine_shield:
+            card.divine_shield = False
+            return
+
+        card.health -= amount
+
+        if card.health < 0 and hasattr(self, "overkill"):
+            self.overkill()
+
+        if isinstance(self, Card) and self.poisonous:
+            card.poisoned = True
+
+    @register_action
+    def die(self):
+        self.trigger("Deathrattle")
+
+    @register_action
+    def summon(self, card: "Card", before=None):
+        if not card:
+            return
+
+        if before in self.minions:
+            self.minions.insert(card, self.minions.index(before))
+        else:
+            self.minions.append(card)
+
+    @register_action
+    def trigger(self, ability: str):
+        ability = ability.lower()
+        if callable(getattr(self, ability, None)):
+            getattr(self, ability)()
 
     @classmethod
     def fromid(cls, card_id: int, **kwargs):
@@ -34,14 +88,14 @@ class Card:
         # Load effect
         from . import effects
 
-        words = re.sub("^\d+-", "", card_data["slug"]).split("-")
+        words = re.sub(r"^\d+-", "", card_data["slug"]).split("-")
         class_name = "".join(map(str.capitalize, words))
         if hasattr(effects, class_name):
-            effect_class = getattr(effects, class_name)
-            cls = type(effect_class.__name__, (cls, effect_class), {})
+            cls = getattr(effects, class_name)
 
-        kwargs.setdefault("attack", card_data["attack"])
+        kwargs.setdefault("attack_power", card_data["attack"])
         kwargs.setdefault("health", card_data["health"])
+        kwargs.setdefault("minion_type", card_data["minionTypeId"])
         kwargs["name"] = card_data["name"]
         kwargs["tier"] = card_data["battlegrounds"]["tier"]
 
@@ -60,4 +114,4 @@ class Card:
 
     @property
     def friendly_minions(self):
-        return [minion for minion in self.controller.minions if minion is not self]
+        return self.controller.minions

@@ -16,7 +16,7 @@ def crawl_cards_data() -> dict:
         os.mkdir(file_directory / "downloads")
 
     with open(file_directory / "downloads/cards.json", "w") as cards_data_file:
-        json.dump(response.json(), cards_data_file, indent=2)
+        json.dump(response.json()["cards"], cards_data_file, indent=2)
 
 
 if __name__ == "__main__":
