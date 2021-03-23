@@ -23,7 +23,7 @@ class Card:
         self.divine_shield = False
         self.poisoned = False
         self.poisonous = False
-        self.revive = False
+        self.reborn = False
         self.taunt = False
 
         for key, value in kwargs.items():
@@ -60,16 +60,19 @@ class Card:
     @register_action
     def die(self):
         self.trigger("Deathrattle")
+        if self.reborn:
+            self.summon(Card.fromid(self.card_id, health=1, reborn=False))
 
     @register_action
     def summon(self, card: "Card", before=None):
         if not card:
             return
 
-        if before in self.minions:
-            self.minions.insert(card, self.minions.index(before))
+        card.controller = self.controller
+        if before in self.friendly_minions:
+            self.friendly_minions.insert(card, self.minions.index(before))
         else:
-            self.minions.append(card)
+            self.friendly_minions.append(card)
 
     @register_action
     def trigger(self, ability: str):
@@ -80,7 +83,7 @@ class Card:
     @classmethod
     def fromid(cls, card_id: int, **kwargs):
         try:
-            card_data = cards_data[card_id]
+            card_data: dict = cards_data[card_id]
         except KeyError:
             logging.error("Card %d not found.", card_id)
             return None
@@ -93,14 +96,15 @@ class Card:
         if hasattr(effects, class_name):
             cls = getattr(effects, class_name)
 
+        kwargs["card_id"] = card_id
         kwargs.setdefault("attack_power", card_data["attack"])
         kwargs.setdefault("health", card_data["health"])
-        kwargs.setdefault("minion_type", card_data["minionTypeId"])
+        kwargs.setdefault("minion_type", card_data.get("minionTypeId"))
         kwargs["name"] = card_data["name"]
         kwargs["tier"] = card_data["battlegrounds"]["tier"]
 
         # Load keywords from card text.
-        text_match = re.match("^<b>[A-Za-z ]*</b>(?: |$)", card_data["text"])
+        text_match = re.match("^(<b>[A-Za-z ]*</b>(?: |$))*", card_data["text"])
         group = text_match.group() if text_match else ""
         keywords = re.findall("<b>([A-Za-z ]*)</b>", group)
         for keyword in keywords:

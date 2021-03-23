@@ -69,7 +69,6 @@ def battle(game: Game):
 
     while any(player.has_attackable_minions for player in game.players):
         current_player = next(current_player_iter)
-        opponent = next(filter(lambda player: player != current_player, game.players))
         current_player.active_minion.attack()
         check_death(game)
 
