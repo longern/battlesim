@@ -102,7 +102,7 @@ class Card:
         kwargs.setdefault("health", card_data["health"])
         kwargs.setdefault("minion_type", card_data.get("minionTypeId"))
         kwargs["name"] = card_data["name"]
-        kwargs["tier"] = card_data["battlegrounds"]["tier"]
+        kwargs["tier"] = card_data.get("battlegrounds", {}).get("tier", 1)
 
         # Load keywords from card text.
         text_match = re.match("^(<b>[A-Za-z ]*</b>(?: |$))*", card_data["text"])
