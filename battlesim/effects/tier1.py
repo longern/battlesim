@@ -25,11 +25,14 @@ class ScavengingHyena(Card):
     @whenever(Card.die)
     def effect(self, this):
         if this.minion_type == 20:
-            self.gain(2, 1)
+            self.attack_power += 2
+            self.health += 1
 
 
 class SelflessHero(Card):
     def deathrattle(self):
-        choice(
+        candidates = [
             minion for minion in self.friendly_minions if not minion.divine_shield
-        ).divine_shield = True
+        ]
+        if candidates:
+            choice(candidates).divine_shield = True

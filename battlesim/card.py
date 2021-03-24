@@ -20,6 +20,7 @@ def pick_attacked_target(minions):
 class Card:
     def __init__(self, **kwargs):
         self.name = "Unknown"
+        self.minion_type = None
         self.divine_shield = False
         self.poisoned = False
         self.poisonous = False
@@ -119,3 +120,7 @@ class Card:
     @property
     def friendly_minions(self):
         return self.controller.minions
+
+    @property
+    def game(self):
+        return self.controller.game

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import random
+from collections import defaultdict
+from functools import cached_property
 from itertools import cycle
 from typing import List
-from functools import cached_property
 
 from .card import Card
 from .keywords import *
@@ -31,6 +32,7 @@ class Player:
 class Game:
     def __init__(self):
         self.players = [Player(self), Player(self)]
+        self.dispatcher = defaultdict(list)
 
     @property
     def minions(self):
@@ -99,5 +101,7 @@ def parse_battlefield(player_minions_stats) -> Game:
             for arg in filter(lambda arg: issubclass(arg, Keyword), args):
                 setattr(minion, arg.as_attribute(), True)
             player.minions.append(minion)
+            if hasattr(minion, "effect"):
+                game.dispatcher[minion.effect.condition].append((minion, minion.effect))
 
     return game
