@@ -2,7 +2,6 @@ from ..card import Card, choice, after, whenever
 
 
 class HeraldOfFlame(Card):
-    @whenever(Card.deal_damage)
     def overkill(self):
         self.deal_damage(3, next(iter(self.enemy_minions), None))
 
