@@ -1,9 +1,13 @@
 from ..card import Card, choice, after, whenever
 
 
+def alive(minion):
+    return minion.health > 0 and not minion.poisoned
+
+
 class HeraldOfFlame(Card):
     def overkill(self):
-        self.deal_damage(3, next(iter(self.enemy_minions), None))
+        self.deal_damage(3, next(filter(alive, self.enemy_minions), None))
 
 
 class Junkbot(Card):

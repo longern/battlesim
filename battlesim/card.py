@@ -43,7 +43,7 @@ class Card:
 
     @register_action
     def deal_damage(self, amount: int, card: "Card"):
-        if amount <= 0:
+        if amount <= 0 or not card:
             return
 
         if card.divine_shield:
@@ -52,7 +52,11 @@ class Card:
 
         card.health -= amount
 
-        if card.health < 0 and hasattr(self, "overkill"):
+        if (
+            card.health < 0
+            and hasattr(self, "overkill")
+            and self.controller is self.game.current_player
+        ):
             self.overkill()
 
         if isinstance(self, Card) and self.poisonous:

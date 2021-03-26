@@ -70,19 +70,21 @@ def battle(game: Game):
         next(current_player_iter)
 
     while any(player.has_attackable_minions for player in game.players):
-        current_player = next(current_player_iter)
-        current_player.active_minion.attack()
+        game.current_player = next(current_player_iter)
+        game.current_player.active_minion.attack()
         check_death(game)
 
         if any(not player.minions for player in game.players):
             break
 
         next_active_minion_index = (
-            current_player.minions.index(current_player.active_minion) + 1
+            game.current_player.minions.index(game.current_player.active_minion) + 1
         )
-        if next_active_minion_index >= len(current_player.minions):
+        if next_active_minion_index >= len(game.current_player.minions):
             next_active_minion_index = 0
-        current_player.active_minion = current_player.minions[next_active_minion_index]
+        game.current_player.active_minion = game.current_player.minions[
+            next_active_minion_index
+        ]
 
     return bool(game.players[0].minions) - bool(game.players[1].minions)
 
