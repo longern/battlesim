@@ -2,6 +2,10 @@ from battlesim.battle import battle, parse_battlefield
 from battlesim.keywords import *
 
 
+def test_glyph_guardian():
+    assert battle(parse_battlefield(([(2, 4, 61029), (1, 1)], [(4, 5)]))) == 0
+
+
 def test_harvest_golem():
     assert battle(parse_battlefield(([(2, 3, 778)], [(3, 3)]))) == 0
 

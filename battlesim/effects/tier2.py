@@ -3,7 +3,7 @@ from ..card import Card, choice, after, whenever
 
 class GlyphGuardian(Card):
     @whenever(Card.attack)
-    def effect(self, this, defender):
+    def effect(self, this, defender=None):
         if self is this:
             self.attack_power *= 2
 
