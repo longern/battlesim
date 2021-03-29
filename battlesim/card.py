@@ -5,6 +5,8 @@ import re
 from random import choice
 
 from .event import after, register_action, whenever
+from .minion_types import MinionType
+from .view import view
 
 cards_data_file_path = pathlib.Path(__file__).parent / "downloads/cards.json"
 with open(cards_data_file_path, "r") as cards_data_file:
@@ -48,7 +50,7 @@ class Card:
             return
 
         if card.divine_shield:
-            card.divine_shield = False
+            card.lose_divine_shield()
             return
 
         card.health -= amount
@@ -63,6 +65,10 @@ class Card:
         if isinstance(self, Card) and self.poisonous:
             card.poisoned = True
 
+    def gain(self, attack_power, health):
+        self.attack_power += attack_power
+        self.health += health
+
     @register_action
     def die(self):
         self.trigger("Deathrattle")
@@ -70,8 +76,12 @@ class Card:
             self.summon(Card.fromid(self.card_id, health=1, reborn=False))
 
     @register_action
+    def lose_divine_shield(self):
+        self.divine_shield = False
+
+    @register_action
     def summon(self, card: "Card", before=None):
-        if not card:
+        if not card or len(self.friendly_minions) >= 7:
             return
 
         card.controller = self.controller
@@ -105,7 +115,7 @@ class Card:
         kwargs["card_id"] = card_id
         kwargs.setdefault("attack_power", card_data["attack"])
         kwargs.setdefault("health", card_data["health"])
-        kwargs.setdefault("minion_type", card_data.get("minionTypeId"))
+        kwargs.setdefault("minion_type", MinionType(card_data.get("minionTypeId", 0)))
         kwargs["name"] = card_data["name"]
         kwargs["tier"] = card_data.get("battlegrounds", {}).get("tier", 1)
 
@@ -129,3 +139,7 @@ class Card:
     @property
     def game(self):
         return self.controller.game
+
+    @property
+    def other(self):
+        return view(lambda iterable: filter(lambda x: x is not self, iterable))

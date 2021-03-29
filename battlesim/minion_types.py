@@ -1,34 +1,25 @@
-class MinionType:
-    pass
+from enum import Enum
 
 
-class Murloc(MinionType):
-    minion_type_id = 14
+class MinionType(Enum):
+    NoMinionType = 0
+    Murloc = 14
+    Demon = 15
+    Mech = 17
+    Elemental = 18
+    Beast = 20
+    Pirate = 23
+    Dragon = 24
+    All = 26
+
+    def __ror__(self, minions):
+        return filter(
+            lambda minion: minion.minion_type in (self, MinionType.All), minions
+        )
+
+    @property
+    def minion_type_id(self):
+        return self.value
 
 
-class Demon(MinionType):
-    minion_type_id = 15
-
-
-class Mech(MinionType):
-    minion_type_id = 17
-
-
-class Elemental(MinionType):
-    minion_type_id = 18
-
-
-class Beast(MinionType):
-    minion_type_id = 20
-
-
-class Pirate(MinionType):
-    minion_type_id = 23
-
-
-class Dragon(MinionType):
-    minion_type_id = 24
-
-
-class All(MinionType):
-    minion_type_id = 26
+locals().update(MinionType.__members__)

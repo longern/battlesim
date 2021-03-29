@@ -8,6 +8,7 @@ def test_glyph_guardian():
 
 def test_harvest_golem():
     assert battle(parse_battlefield(([778], [(3, 3)]))) == 0
+    assert battle(parse_battlefield(([778, (5, 1), (1, 1, Taunt)], [(5, 5)]))) == 0
 
 
 def test_kaboom_bot():

@@ -1,3 +1,4 @@
+from ..minion_types import MinionType
 from ..card import Card, after, choice, whenever
 
 
@@ -8,9 +9,7 @@ class FiendishServant(Card):
 
 class RedWhelp(Card):
     def start_of_combat(self):
-        amount = len(
-            [minion for minion in self.friendly_minions if minion.minion_type == 24]
-        )
+        amount = len(list(self.friendly_minions | MinionType.Dragon))
         self.deal_damage(amount, choice(self.enemy_minions))
 
 
@@ -24,9 +23,8 @@ class Scallywag(Card):
 class ScavengingHyena(Card):
     @whenever(Card.die)
     def effect(self, this):
-        if this.minion_type == 20:
-            self.attack_power += 2
-            self.health += 1
+        if self.controller is this.controller and this.minion_type is MinionType.Beast:
+            self.gain(2, 1)
 
 
 class SelflessHero(Card):

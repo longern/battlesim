@@ -1,3 +1,4 @@
+from battlesim.minion_types import MinionType
 from ..card import Card, choice, after, whenever
 
 
@@ -23,6 +24,11 @@ class KaboomBot(Card):
         self.deal_damage(4, choice(self.enemy_minions))
 
 
+class KindlyGrandmother(Card):
+    def deathrattle(self):
+        self.summon(Card.fromid(39161))
+
+
 class MurlocWarleader(Card):
     def aura(self):
         pass
@@ -31,7 +37,7 @@ class MurlocWarleader(Card):
 class PackLeader(Card):
     @whenever(Card.summon)
     def effect(self, this, card):
-        if this.controller == self.controller and card.minion_type == 20:
+        if this.controller == self.controller and card.minion_type is MinionType.Beast:
             card.attack_power += 2
 
 
@@ -45,6 +51,12 @@ class TormentedRitualist(Card):
     def effect(self, this, defender):
         if self is defender:
             self.give(self.adjacent_minions, attack_power=1, health=1)
+
+
+class UnstableGhoul(Card):
+    def deathrattle(self):
+        for minion in [*self.friendly_minions, *self.enemy_minions]:
+            self.deal_damage(1, minion)
 
 
 class YoHoOgre(Card):

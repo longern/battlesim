@@ -1,4 +1,11 @@
+from ..minion_types import MinionType
 from ..card import Card, choice, after, whenever
+
+
+class InfestedWolf(Card):
+    def deathrattle(self):
+        for _ in range(2):
+            self.summon(Card.fromid(38734))
 
 
 class ImpGangBoss(Card):
@@ -23,11 +30,12 @@ class MonstrousMacaw(Card):
 
 class RatPack(Card):
     def deathrattle(self):
-        self.summon(Card.fromid(41839))
+        for _ in range(self.attack_power):
+            self.summon(Card.fromid(41839))
 
 
 class SoulJuggler(Card):
     @after(Card.die)
     def effect(self, this):
-        if this.minion_type == 15:
+        if this.minion_type is MinionType.Demon:
             self.deal_damage(3, choice(self.enemy_minions))

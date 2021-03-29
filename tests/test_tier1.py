@@ -14,6 +14,10 @@ def test_red_whelp():
     assert battle(parse_battlefield(([59968], [(1, 4)]))) == -1
 
 
+def test_scally_wag():
+    assert battle(parse_battlefield(([61061, (4, 1, Taunt)], [(1, 4)]))) == 0
+
+
 def test_scavenging_hyena():
     assert battle(parse_battlefield(([40426, 1281], [(2, 4)]))) == 1
 
