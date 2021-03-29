@@ -96,16 +96,19 @@ def battle(game: Game):
 def parse_battlefield(player_minions_stats) -> Game:
     game = Game()
     for player, minions_stats in zip(game.players, player_minions_stats):
-        for attack, health, *args in minions_stats:
-            if args and isinstance(args[0], int):
-                card_id = args.pop(0)
-                minion = Card.fromid(
-                    card_id, attack_power=attack, health=health, controller=player
-                )
+        for minion_stat in minions_stats:
+            if isinstance(minion_stat, int):
+                minion = Card.fromid(minion_stat)
             else:
-                minion = Card(attack_power=attack, health=health, controller=player)
-            for arg in filter(lambda arg: issubclass(arg, Keyword), args):
-                setattr(minion, arg.as_attribute(), True)
+                attack, health, *args = minion_stat
+                if args and isinstance(args[0], int):
+                    card_id = args.pop(0)
+                    minion = Card.fromid(card_id, attack_power=attack, health=health)
+                else:
+                    minion = Card(attack_power=attack, health=health)
+                for arg in filter(lambda arg: issubclass(arg, Keyword), args):
+                    setattr(minion, arg.as_attribute(), True)
+            minion.controller = player
             player.minions.append(minion)
             if hasattr(minion, "effect"):
                 game.dispatcher[minion.effect.condition].append((minion, minion.effect))
