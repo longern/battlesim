@@ -26,6 +26,7 @@ class Card:
         self.poisonous = False
         self.reborn = False
         self.taunt = False
+        self.windfury = False
 
         for key, value in kwargs.items():
             setattr(self, key, value)

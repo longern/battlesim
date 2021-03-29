@@ -59,6 +59,7 @@ def battle(game: Game):
         for minion in player.minions:
             if hasattr(minion, "start_of_combat"):
                 minion.start_of_combat()
+    check_death(game)
 
     for player in game.players:
         player.active_minion = next(iter(player.minions), None)
@@ -73,6 +74,9 @@ def battle(game: Game):
         game.current_player = next(current_player_iter)
         game.current_player.active_minion.attack()
         check_death(game)
+        if getattr(game.current_player.active_minion, "windfury", False):
+            game.current_player.active_minion.attack()
+            check_death(game)
 
         if any(not player.minions for player in game.players):
             break
