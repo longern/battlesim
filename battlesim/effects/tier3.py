@@ -2,10 +2,12 @@ from ..minion_types import MinionType
 from ..card import Card, choice, after, whenever
 
 
-class InfestedWolf(Card):
-    def deathrattle(self):
-        for _ in range(2):
-            self.summon(Card.fromid(38734))
+class ArmOfTheEmpire(Card):
+    @whenever(Card.attack)
+    def effect(self, this, defender):
+        """Whenever a friendly Taunt minion is attacked, give it +2 Attack permanently."""
+        if self.controller is defender.controller and defender.taunt:
+            defender.gain(2, 0, permanently=True)
 
 
 class ImpGangBoss(Card):
@@ -13,6 +15,12 @@ class ImpGangBoss(Card):
     def effect(self, this, amount, target):
         if self is target:
             self.summon(Card.fromid(2779))
+
+
+class InfestedWolf(Card):
+    def deathrattle(self):
+        for _ in range(2):
+            self.summon(Card.fromid(38734))
 
 
 class MonstrousMacaw(Card):

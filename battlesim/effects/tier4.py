@@ -8,6 +8,22 @@ def alive(minions):
     return filter(lambda minion: minion.health > 0 and not minion.poisoned, minions)
 
 
+class BolvarFireblood(Card):
+    @after(Card.lose_divine_shield)
+    def effect(self, this):
+        """After a friendly minion loses Divine Shield, gain +2 Attack."""
+        if self.controller is this.controller:
+            self.gain(2, 0)
+
+
+class ChampionOfYshaarj(Card):
+    @whenever(Card.attack)
+    def effect(self, this, defender):
+        """Whenever a friendly Taunt minion is attacked, gain +1/+1 permanently."""
+        if self.controller is defender.controller and defender.taunt:
+            self.gain(1, 1, permanently=True)
+
+
 class HeraldOfFlame(Card):
     def overkill(self):
         self.deal_damage(3, next(self.enemy_minions | alive, None))

@@ -76,7 +76,7 @@ class Card:
         if isinstance(self, Card) and self.poisonous:
             card.poisoned = True
 
-    def gain(self, attack_power, health):
+    def gain(self, attack_power, health, permanently=False):
         self.attack_power += attack_power
         self.health += health
 
