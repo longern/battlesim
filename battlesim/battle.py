@@ -77,6 +77,8 @@ def battle(game: Game):
         try:
             active_minion = next(filter(attackable, game.current_player.minions))
         except StopIteration:
+            for minion in game.current_player.minions:
+                minion.num_of_attacks = 0
             active_minion = next(filter(attackable, game.current_player.minions), None)
             if active_minion is None:
                 continue

@@ -41,9 +41,10 @@ class PackLeader(Card):
             card.attack_power += 2
 
 
-class SpawnOfNZoth(Card):
+class SpawnOfNzoth(Card):
     def deathrattle(self):
-        self.give(self.friendly_minions, attack_power=1, health=1)
+        for minion in self.friendly_minions:
+            minion.gain(1, 1)
 
 
 class TormentedRitualist(Card):

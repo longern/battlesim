@@ -2,7 +2,7 @@ import json
 import logging
 import pathlib
 import re
-from random import choice
+from typing import List
 
 from .event import after, register_action, whenever
 from .minion_types import MinionType
@@ -11,6 +11,15 @@ from .view import view
 cards_data_file_path = pathlib.Path(__file__).parent / "downloads/cards.json"
 with open(cards_data_file_path, "r") as cards_data_file:
     cards_data = {card["id"]: card for card in json.load(cards_data_file)}
+
+
+def choice(seq):
+    import random
+
+    try:
+        return random.choice(seq)
+    except IndexError:
+        return None
 
 
 def pick_attacked_target(minions):
@@ -42,8 +51,9 @@ class Card:
         if defender is None:
             defender = pick_attacked_target(self.enemy_minions)
 
-        self.deal_damage(self.attack_power, defender)
-        defender.deal_damage(defender.attack_power, self)
+        if defender is not None:
+            self.deal_damage(self.attack_power, defender)
+            defender.deal_damage(defender.attack_power, self)
 
     @register_action
     def deal_damage(self, amount: int, card: "Card"):
@@ -132,11 +142,11 @@ class Card:
         return cls(**kwargs)
 
     @property
-    def enemy_minions(self):
+    def enemy_minions(self) -> List["Card"]:
         return self.controller.opponent.minions
 
     @property
-    def friendly_minions(self):
+    def friendly_minions(self) -> List["Card"]:
         return self.controller.minions
 
     @property
