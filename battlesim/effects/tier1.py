@@ -17,13 +17,21 @@ class Scallywag(Card):
     def deathrattle(self):
         pirate = Card.fromid(62213)
         self.summon(pirate)
-        pirate.attack()
+
+
+class SkyPirate(Card):
+    """Child card of scallywag"""
+
+    @after(Card.summon)
+    def effect(self, this, card, before=None):
+        if self is card:
+            self.attack()
 
 
 class ScavengingHyena(Card):
     @whenever(Card.die)
     def effect(self, this):
-        if self.controller is this.controller and this.minion_type is MinionType.Beast:
+        if self.controller is this.controller and this in MinionType.Beast:
             self.gain(2, 1)
 
 

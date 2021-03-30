@@ -44,14 +44,14 @@ def check_death(game: Game):
     for player in game.players:
         for minion in player.minions[:]:
             if minion.health <= 0 or minion.poisoned:
-                minion_index = player.minions.index(minion)
+                minion.index = player.minions.index(minion)
                 player.minions.remove(minion)
                 minion.die()
                 if player.active_minion == minion:
-                    if minion_index >= len(player.minions):
+                    if minion.index >= len(player.minions):
                         player.active_minion = player.first_minion
                     else:
-                        player.active_minion = player.minions[minion_index]
+                        player.active_minion = player.minions[minion.index]
 
 
 def battle(game: Game):

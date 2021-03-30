@@ -20,7 +20,7 @@ class KingBagurgle(Card):
 class MamaBear(Card):
     @whenever(Card.summon)
     def effect(self, this, card, before=None):
-        if self.controller == card.controller and card.minion_type is MinionType.Beast:
+        if self.controller == card.controller and card in MinionType.Beast:
             card.attack_power += 4
             card.health += 4
 

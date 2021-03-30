@@ -80,15 +80,17 @@ class Card:
         self.divine_shield = False
 
     @register_action
-    def summon(self, card: "Card", before=None):
+    def summon(self, card: "Card"):
         if not card or len(self.friendly_minions) >= 7:
             return
 
         card.controller = self.controller
-        if before in self.friendly_minions:
-            self.friendly_minions.insert(card, self.minions.index(before))
-        else:
-            self.friendly_minions.append(card)
+        self.friendly_minions.insert(
+            getattr(self, "index", len(self.friendly_minions)), card
+        )
+
+        if hasattr(card, "effect"):
+            self.game.dispatcher[card.effect.condition].append((card, card.effect))
 
     @register_action
     def trigger(self, ability: str):

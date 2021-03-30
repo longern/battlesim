@@ -37,5 +37,5 @@ class RatPack(Card):
 class SoulJuggler(Card):
     @after(Card.die)
     def effect(self, this):
-        if this.minion_type is MinionType.Demon:
+        if this in MinionType.Demon:
             self.deal_damage(3, choice(self.enemy_minions))

@@ -37,7 +37,7 @@ class MurlocWarleader(Card):
 class PackLeader(Card):
     @whenever(Card.summon)
     def effect(self, this, card):
-        if this.controller == self.controller and card.minion_type is MinionType.Beast:
+        if this.controller == self.controller and card in MinionType.Beast:
             card.attack_power += 2
 
 

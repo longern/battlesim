@@ -6,7 +6,7 @@ from ..card import Card, choice, after, whenever
 class DreadAdmiralEliza(Card):
     @whenever(Card.attack)
     def effect(self, this, defender=None):
-        if self.controller is this.controller and this.minion_type is MinionType.Pirate:
+        if self.controller is this.controller and this in MinionType.Pirate:
             for minion in self.friendly_minions:
                 minion.attack_power += 2
                 minion.health += 1

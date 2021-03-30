@@ -17,9 +17,5 @@ class MinionType(Enum):
             lambda minion: minion.minion_type in (self, MinionType.All), minions
         )
 
-    @property
-    def minion_type_id(self):
-        return self.value
-
-
-locals().update(MinionType.__members__)
+    def __contains__(self, minion):
+        return minion.minion_type in (self, MinionType.All)
