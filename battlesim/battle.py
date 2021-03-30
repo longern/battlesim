@@ -28,6 +28,9 @@ class Player:
     def opponent(self):
         return next(filter(lambda player: player is not self, self.game.players), None)
 
+    def __repr__(self):
+        return repr(self.minions)
+
 
 class Game:
     def __init__(self):
@@ -39,6 +42,9 @@ class Game:
         for player in self.players:
             yield from player.minions
 
+    def __repr__(self):
+        return f"{repr(self.players[0])}\n{repr(self.players[1])}\n"
+
 
 def check_death(game: Game):
     for player in game.players:
@@ -47,11 +53,6 @@ def check_death(game: Game):
                 minion.index = player.minions.index(minion)
                 player.minions.remove(minion)
                 minion.die()
-                if player.active_minion == minion:
-                    if minion.index >= len(player.minions):
-                        player.active_minion = player.first_minion
-                    else:
-                        player.active_minion = player.minions[minion.index]
 
 
 def battle(game: Game):
@@ -61,34 +62,35 @@ def battle(game: Game):
                 minion.start_of_combat()
     check_death(game)
 
-    for player in game.players:
-        player.active_minion = next(iter(player.minions), None)
-
     current_player_iter = cycle(game.players)
     if len(game.players[1].minions) > len(game.players[0].minions) + random.uniform(
         -0.1, 0.1
     ):
         next(current_player_iter)
 
-    while any(player.has_attackable_minions for player in game.players):
+    attackable = lambda minion: minion.num_of_attacks < 1 and minion.attack_power > 0
+
+    while any(player.has_attackable_minions for player in game.players) and all(
+        player.minions for player in game.players
+    ):
         game.current_player = next(current_player_iter)
-        game.current_player.active_minion.attack()
+        try:
+            active_minion = next(filter(attackable, game.current_player.minions))
+        except StopIteration:
+            active_minion = next(filter(attackable, game.current_player.minions), None)
+            if active_minion is None:
+                continue
+        active_minion.attack()
         check_death(game)
-        if getattr(game.current_player.active_minion, "windfury", False):
-            game.current_player.active_minion.attack()
+
+        if (
+            getattr(active_minion, "windfury", False)
+            and active_minion in game.current_player.minions
+        ):
+            active_minion.attack()
             check_death(game)
 
-        if any(not player.minions for player in game.players):
-            break
-
-        next_active_minion_index = (
-            game.current_player.minions.index(game.current_player.active_minion) + 1
-        )
-        if next_active_minion_index >= len(game.current_player.minions):
-            next_active_minion_index = 0
-        game.current_player.active_minion = game.current_player.minions[
-            next_active_minion_index
-        ]
+        active_minion.num_of_attacks += 1
 
     return bool(game.players[0].minions) - bool(game.players[1].minions)
 

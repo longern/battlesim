@@ -24,6 +24,7 @@ class Card:
         self.name = "Unknown"
         self.minion_type = None
         self.divine_shield = False
+        self.num_of_attacks = 0
         self.poisoned = False
         self.poisonous = False
         self.reborn = False
