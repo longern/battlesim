@@ -17,6 +17,11 @@ class KingBagurgle(Card):
     deathrattle = battlecry
 
 
+class Malganis(Card):
+    def aura(self):
+        """Your other Demons have +2/+2. Your hero is Immune."""
+
+
 class MamaBear(Card):
     @whenever(Card.summon)
     def effect(self, this, card, before=None):
@@ -29,8 +34,7 @@ class SeabreakerGoliath(Card):
     def overkill(self):
         """Overkill: Give your other Pirates +2/+2."""
         for minion in self.friendly_minions | self.other | MinionType.Pirate:
-            minion.attack_power += 2
-            minion.health += 2
+            minion.gain(2, 2)
 
 
 class SneedsOldShredder(Card):

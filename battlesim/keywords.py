@@ -1,10 +1,13 @@
 import re
+from .event import after
+from .card import Card
+
 
 class Keyword:
     @classmethod
     def as_attribute(cls):
-        name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
+        name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", cls.__name__)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", name).lower()
 
 
 class Taunt(Keyword):
@@ -37,3 +40,16 @@ class Magnetic(Keyword):
 
 class Reborn(Keyword):
     keyword_id = 78
+
+
+class Frenzy(Keyword):
+    keyword_id = 99
+
+    def frenzy(self):
+        raise NotImplementedError()
+
+    @after(Card.deal_damage)
+    def effect(self, this, amount, card: "Card"):
+        if self is card and self.health > 0 and not self.poisoned and not self.burst:
+            self.burst = True
+            self.frenzy()

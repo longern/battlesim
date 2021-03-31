@@ -32,6 +32,7 @@ class Card:
     def __init__(self, **kwargs):
         self.name = "Unknown"
         self.minion_type = None
+        self.burst = False
         self.divine_shield = False
         self.num_of_attacks = 0
         self.poisoned = False
@@ -140,6 +141,11 @@ class Card:
             kwargs.setdefault(keyword.replace(" ", "_").lower(), True)
 
         return cls(**kwargs)
+
+    @property
+    def adjacent_minions(self) -> List["Card"]:
+        index = self.controller.minions.index(self)
+        return self.controller.minions[max(index - 1, 0), index + 1 : 2]
 
     @property
     def enemy_minions(self) -> List["Card"]:

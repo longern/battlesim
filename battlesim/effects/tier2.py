@@ -34,11 +34,21 @@ class MurlocWarleader(Card):
         pass
 
 
+class OldMurkEye(Card):
+    def aura(self):
+        """Has +1 Attack for each other Murloc on the battlefield."""
+
+
 class PackLeader(Card):
     @whenever(Card.summon)
     def effect(self, this, card):
         if this.controller == self.controller and card in MinionType.Beast:
             card.attack_power += 2
+
+
+class SouthseaCaptain(Card):
+    def aura(self):
+        pass
 
 
 class SpawnOfNzoth(Card):
@@ -51,13 +61,20 @@ class TormentedRitualist(Card):
     @whenever(Card.attack)
     def effect(self, this, defender):
         if self is defender:
-            self.give(self.adjacent_minions, attack_power=1, health=1)
+            for minion in self.adjacent_minions:
+                minion.gain(1, 1)
 
 
 class UnstableGhoul(Card):
     def deathrattle(self):
         for minion in [*self.friendly_minions, *self.enemy_minions]:
             self.deal_damage(1, minion)
+
+
+class WaxriderTogwaggle(Card):
+    @whenever(Card.attack)
+    def effect(self, this):
+        """Whenever a friendly Dragon kills an enemy, gain +2/+2."""
 
 
 class YoHoOgre(Card):

@@ -8,8 +8,12 @@ class DreadAdmiralEliza(Card):
     def effect(self, this, defender=None):
         if self.controller is this.controller and this in MinionType.Pirate:
             for minion in self.friendly_minions:
-                minion.attack_power += 2
-                minion.health += 1
+                minion.gain(2, 1)
+
+
+class GentleDjinni(Card):
+    def deathrattle(self):
+        """Summon another random Elemental and add a copy of it to your hand."""
 
 
 class GoldrinnTheGreatWolf(Card):

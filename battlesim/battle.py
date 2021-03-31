@@ -43,7 +43,7 @@ class Game:
             yield from player.minions
 
     def __repr__(self):
-        return f"{repr(self.players[0])}\n{repr(self.players[1])}\n"
+        return "\n".join(map(repr, self.players))
 
 
 def check_death(game: Game):
