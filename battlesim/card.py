@@ -155,6 +155,19 @@ class Card:
 
         return cls(**kwargs)
 
+    @classmethod
+    def random(cls, **kwargs):
+        candidates = [
+            card["dbfId"]
+            for card in cards_data
+            if all(card.get(key) == value for key, value in kwargs.items())
+        ]
+
+        if not candidates:
+            return None
+
+        return cls.fromid(choice(candidates))
+
     @property
     def adjacent_minions(self) -> List["Card"]:
         index = self.controller.minions.index(self)
