@@ -51,7 +51,7 @@ class HeraldOfFlame(Card):
 class Junkbot(Card):
     @whenever(Card.die)
     def effect(self, this):
-        if self.controller is this.controller and this in MinionType.Mech:
+        if self.controller is this.controller and this in MinionType.Mechanical:
             self.gain(2, 2)
 
 

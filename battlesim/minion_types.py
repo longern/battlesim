@@ -5,7 +5,7 @@ class MinionType(Enum):
     NoMinionType = 0
     Murloc = 14
     Demon = 15
-    Mech = 17
+    Mechanical = 17
     Elemental = 18
     Beast = 20
     Pirate = 23

@@ -10,7 +10,7 @@ from .view import view
 
 cards_data_file_path = pathlib.Path(__file__).parent / "downloads/cards.json"
 with open(cards_data_file_path, "r") as cards_data_file:
-    cards_data = {card["id"]: card for card in json.load(cards_data_file)}
+    cards_data = {card["dbfId"]: card for card in json.load(cards_data_file)}
 
 
 def choice(seq):
@@ -121,20 +121,33 @@ class Card:
         # Load effect
         from . import effects
 
-        words = re.sub(r"^\d+-", "", card_data["slug"]).split("-")
-        class_name = "".join(map(str.capitalize, words))
+        class_name = "".join(
+            map(
+                str.capitalize,
+                re.sub(r"[^ 0-9A-Za-z]", "", card_data["name"]).split(" "),
+            )
+        )
         if hasattr(effects, class_name):
             cls = getattr(effects, class_name)
 
         kwargs["card_id"] = card_id
         kwargs.setdefault("attack_power", card_data["attack"])
         kwargs.setdefault("health", card_data["health"])
-        kwargs.setdefault("minion_type", MinionType(card_data.get("minionTypeId", 0)))
+        kwargs.setdefault(
+            "minion_type",
+            getattr(
+                MinionType,
+                card_data.get("race", "").lower().capitalize(),
+                MinionType.NoMinionType,
+            ),
+        )
         kwargs["name"] = card_data["name"]
-        kwargs["tier"] = card_data.get("battlegrounds", {}).get("tier", 1)
+        kwargs["tier"] = card_data.get("techLevel", 1)
 
         # Load keywords from card text.
-        text_match = re.match("^(<b>[A-Za-z ]*</b>(?: |$))*", card_data["text"])
+        text_match = re.match(
+            r"^(<b>[A-Za-z ]*</b>(?:\s|$))*", card_data.get("text", "")
+        )
         group = text_match.group() if text_match else ""
         keywords = re.findall("<b>([A-Za-z ]*)</b>", group)
         for keyword in keywords:

@@ -21,7 +21,7 @@ class BarrensBlacksmith(Card, Frenzy):
 class DeflectOBot(Card):
     @whenever(Card.summon)
     def effect(self, this, card):
-        if self.controller is card.controller and card in MinionType.Mech:
+        if self.controller is card.controller and card in MinionType.Mechanical:
             self.attack_power += 1
             self.divine_shield = True
 
