@@ -10,7 +10,7 @@ from .view import view
 
 cards_data_file_path = pathlib.Path(__file__).parent / "downloads/cards.json"
 with open(cards_data_file_path, "r") as cards_data_file:
-    cards_data = {card["dbfId"]: card for card in json.load(cards_data_file)}
+    cards_data = {card["id"]: card for card in json.load(cards_data_file)}
 
 
 def choice(seq):
@@ -32,6 +32,7 @@ class Card:
     def __init__(self, **kwargs):
         self.name = "Unknown"
         self.minion_type = None
+        self.attacking = False
         self.burst = False
         self.divine_shield = False
         self.num_of_attacks = 0
@@ -45,7 +46,7 @@ class Card:
             setattr(self, key, value)
 
     def __repr__(self):
-        return f"<Card({self.name}, {self.attack_power}, {self.health})>"
+        return f"<Card({self.name}, {self.atk}, {self.health})>"
 
     @register_action
     def attack(self, defender=None):
@@ -53,8 +54,10 @@ class Card:
             defender = pick_attacked_target(self.enemy_minions)
 
         if defender is not None:
-            self.deal_damage(self.attack_power, defender)
-            defender.deal_damage(defender.attack_power, self)
+            self.attacking = True
+            self.deal_damage(self.atk, defender)
+            defender.deal_damage(defender.atk, self)
+            self.attacking = False
 
     @register_action
     def deal_damage(self, amount: int, card: "Card"):
@@ -77,8 +80,8 @@ class Card:
         if isinstance(self, Card) and self.poisonous:
             card.poisoned = True
 
-    def gain(self, attack_power, health, permanently=False):
-        self.attack_power += attack_power
+    def gain(self, atk, health, permanently=False):
+        self.atk += atk
         self.health += health
 
     @register_action
@@ -111,7 +114,7 @@ class Card:
             getattr(self, ability)()
 
     @classmethod
-    def fromid(cls, card_id: int, **kwargs):
+    def fromid(cls, card_id: str, **kwargs):
         try:
             card_data: dict = cards_data[card_id]
         except KeyError:
@@ -131,8 +134,9 @@ class Card:
             cls = getattr(effects, class_name)
 
         kwargs["card_id"] = card_id
-        kwargs.setdefault("attack_power", card_data["attack"])
-        kwargs.setdefault("health", card_data["health"])
+        kwargs.setdefault("atk", card_data.get("attack"))
+        kwargs.setdefault("health", card_data.get("health"))
+        kwargs.setdefault("cardtype", card_data.get("type"))
         kwargs.setdefault(
             "minion_type",
             getattr(
@@ -158,7 +162,7 @@ class Card:
     @classmethod
     def random(cls, **kwargs):
         candidates = [
-            card["dbfId"]
+            card["id"]
             for card in cards_data
             if all(card.get(key) == value for key, value in kwargs.items())
         ]

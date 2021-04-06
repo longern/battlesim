@@ -4,14 +4,14 @@ from ..card import Card, choice, after, whenever
 
 class IronhideDirehorn(Card):
     def overkill(self):
-        self.summon(Card.fromid(50359))
+        self.summon(Card.fromid("TRL_232t"))
 
 
 class KingBagurgle(Card):
     def battlecry(self):
         """Battlecry and Deathrattle: Give your other Murlocs +2/+2."""
         for minion in self.friendly_minions | self.other | MinionType.Murloc:
-            minion.attack_power += 2
+            minion.atk += 2
             minion.health += 2
 
     deathrattle = battlecry
@@ -26,7 +26,7 @@ class MamaBear(Card):
     @whenever(Card.summon)
     def effect(self, this, card, before=None):
         if self.controller == card.controller and card in MinionType.Beast:
-            card.attack_power += 4
+            card.atk += 4
             card.health += 4
 
 
@@ -47,4 +47,4 @@ class Voidlord(Card):
     def deathrattle(self):
         # Summon three 1/3 Demons with Taunt.
         for _ in range(3):
-            self.summon(Card.fromid(46056))
+            self.summon(Card.fromid("LOOT_368"))

@@ -19,7 +19,7 @@ class GentleDjinni(Card):
 class GoldrinnTheGreatWolf(Card):
     def deathrattle(self):
         for minion in self.friendly_minions | MinionType.Beast:
-            minion.attack_power += 5
+            minion.atk += 5
             minion.health += 5
 
 

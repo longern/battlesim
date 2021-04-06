@@ -6,17 +6,17 @@ class GlyphGuardian(Card):
     @whenever(Card.attack)
     def effect(self, this, defender=None):
         if self is this:
-            self.attack_power *= 2
+            self.atk *= 2
 
 
 class HarvestGolem(Card):
     def deathrattle(self):
-        self.summon(Card.fromid(471))
+        self.summon(Card.fromid("skele21"))
 
 
 class Imprisoner(Card):
     def deathrattle(self):
-        self.summon(Card.fromid(2779))
+        self.summon(Card.fromid("BRM_006t"))
 
 
 class KaboomBot(Card):
@@ -26,7 +26,7 @@ class KaboomBot(Card):
 
 class KindlyGrandmother(Card):
     def deathrattle(self):
-        self.summon(Card.fromid(39161))
+        self.summon(Card.fromid("KAR_005a"))
 
 
 class MurlocWarleader(Card):
@@ -43,7 +43,7 @@ class PackLeader(Card):
     @whenever(Card.summon)
     def effect(self, this, card):
         if this.controller == self.controller and card in MinionType.Beast:
-            card.attack_power += 2
+            card.atk += 2
 
 
 class SouthseaCaptain(Card):

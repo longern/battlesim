@@ -3,24 +3,24 @@ from battlesim.keywords import *
 
 
 def test_acolyte_of_cthun():
-    assert battle(parse_battlefield(([63614], [(2, 2)]))) == 1
-    assert battle(parse_battlefield(([63614], [(2, 3)]))) == 0
-    assert battle(parse_battlefield(([63614], [(2, 5)]))) == -1
+    assert battle(parse_battlefield((["BGS_106"], [(2, 2)]))) == 1
+    assert battle(parse_battlefield((["BGS_106"], [(2, 3)]))) == 0
+    assert battle(parse_battlefield((["BGS_106"], [(2, 5)]))) == -1
 
 
 def test_red_whelp():
-    assert battle(parse_battlefield(([59968], [(1, 2)]))) == 1
-    assert battle(parse_battlefield(([59968], [(1, 3)]))) == 0
-    assert battle(parse_battlefield(([59968], [(1, 4)]))) == -1
+    assert battle(parse_battlefield((["BGS_019"], [(1, 2)]))) == 1
+    assert battle(parse_battlefield((["BGS_019"], [(1, 3)]))) == 0
+    assert battle(parse_battlefield((["BGS_019"], [(1, 4)]))) == -1
 
 
 def test_scally_wag():
-    assert battle(parse_battlefield(([61061, (4, 1, Taunt)], [(1, 4)]))) == 0
+    assert battle(parse_battlefield((["BGS_061", (4, 1, Taunt)], [(1, 4)]))) == 0
 
 
 def test_scavenging_hyena():
-    assert battle(parse_battlefield(([40426, 1281], [(2, 4)]))) == 1
+    assert battle(parse_battlefield((["CFM_315", "EX1_531"], [(2, 4)]))) == 1
 
 
 def test_selfless_hero():
-    assert battle(parse_battlefield(([38740, (1, 1)], [(2, 4)]))) == 0
+    assert battle(parse_battlefield((["OG_221", (1, 1)], [(2, 4)]))) == 0

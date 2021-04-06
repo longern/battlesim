@@ -22,7 +22,7 @@ class Player:
 
     @property
     def has_attackable_minions(self):
-        return any(minion.attack_power > 0 for minion in self.minions)
+        return any(minion.atk > 0 for minion in self.minions)
 
     @cached_property
     def opponent(self):
@@ -68,7 +68,7 @@ def battle(game: Game):
     ):
         next(current_player_iter)
 
-    attackable = lambda minion: minion.num_of_attacks < 1 and minion.attack_power > 0
+    attackable = lambda minion: minion.num_of_attacks < 1 and minion.atk > 0
 
     while any(player.has_attackable_minions for player in game.players) and all(
         player.minions for player in game.players
@@ -101,15 +101,15 @@ def parse_battlefield(player_minions_stats) -> Game:
     game = Game()
     for player, minions_stats in zip(game.players, player_minions_stats):
         for minion_stat in minions_stats:
-            if isinstance(minion_stat, int):
+            if isinstance(minion_stat, str):
                 minion = Card.fromid(minion_stat)
             else:
                 attack, health, *args = minion_stat
-                if args and isinstance(args[0], int):
+                if args and isinstance(args[0], str):
                     card_id = args.pop(0)
-                    minion = Card.fromid(card_id, attack_power=attack, health=health)
+                    minion = Card.fromid(card_id, atk=attack, health=health)
                 else:
-                    minion = Card(attack_power=attack, health=health)
+                    minion = Card(atk=attack, health=health)
                 for arg in filter(lambda arg: issubclass(arg, Keyword), args):
                     setattr(minion, arg.as_attribute(), True)
             minion.controller = player

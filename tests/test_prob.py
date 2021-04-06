@@ -14,7 +14,7 @@ def calculate_winrate(friendly_minions, enemy_minions):
 
 def test_prob_1():
     winrate = calculate_winrate(
-        [60628, 60628, (2, 2), (2, 2, 59968), 59968, (2, 1), (1, 1)],
-        [38797, 61029, 64054, (4, 4), 49279, (1, 1)],
+        ["BGS_039", "BGS_039", (2, 2), (2, 2, "BGS_019"), "BGS_019", (2, 1), (1, 1)],
+        ["OG_256", "BGS_045", "BGS_119", (4, 4), "BOT_606", (1, 1)],
     )
     assert winrate[-1] > 0.7

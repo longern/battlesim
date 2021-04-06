@@ -4,7 +4,7 @@ from ..card import Card, after, choice, whenever
 
 class FiendishServant(Card):
     def deathrattle(self):
-        choice(self.friendly_minions).attack_power += self.attack_power
+        choice(self.friendly_minions).atk += self.atk
 
 
 class RedWhelp(Card):
@@ -15,7 +15,7 @@ class RedWhelp(Card):
 
 class Scallywag(Card):
     def deathrattle(self):
-        pirate = Card.fromid(62213)
+        pirate = Card.fromid("BGS_061t")
         self.summon(pirate)
 
 

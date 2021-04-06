@@ -22,7 +22,7 @@ class DeflectOBot(Card):
     @whenever(Card.summon)
     def effect(self, this, card):
         if self.controller is card.controller and card in MinionType.Mechanical:
-            self.attack_power += 1
+            self.atk += 1
             self.divine_shield = True
 
 
@@ -30,13 +30,13 @@ class ImpGangBoss(Card):
     @whenever(Card.deal_damage)
     def effect(self, this, amount, target):
         if self is target:
-            self.summon(Card.fromid(2779))
+            self.summon(Card.fromid("BRM_006t"))
 
 
 class InfestedWolf(Card):
     def deathrattle(self):
         for _ in range(2):
-            self.summon(Card.fromid(38734))
+            self.summon(Card.fromid("OG_216a"))
 
 
 class MonstrousMacaw(Card):
@@ -54,14 +54,14 @@ class MonstrousMacaw(Card):
 
 class RatPack(Card):
     def deathrattle(self):
-        for _ in range(self.attack_power):
-            self.summon(Card.fromid(41839))
+        for _ in range(self.atk):
+            self.summon(Card.fromid("CFM_316t"))
 
 
 class ReplicatingMenace(Card):
     def deathrattle(self):
         for _ in range(3):
-            self.summon(Card.fromid(48842))
+            self.summon(Card.fromid("BOT_312t"))
 
 
 class SoulJuggler(Card):
