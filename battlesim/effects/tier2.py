@@ -10,13 +10,18 @@ class GlyphGuardian(Card):
 
 
 class HarvestGolem(Card):
+    normal_child = "skele21"
+
     def deathrattle(self):
-        self.summon(Card.fromid("skele21"))
+        self.summon(self.child_card())
 
 
 class Imprisoner(Card):
+    normal_child = "BRM_006t"
+    premium_child = "TB_BaconUps_030t"
+
     def deathrattle(self):
-        self.summon(Card.fromid("BRM_006t"))
+        self.summon(self.child_card())
 
 
 class KaboomBot(Card):
@@ -26,7 +31,7 @@ class KaboomBot(Card):
 
 class KindlyGrandmother(Card):
     def deathrattle(self):
-        self.summon(Card.fromid("KAR_005a"))
+        self.summon(self.child_card())
 
 
 class MurlocWarleader(Card):

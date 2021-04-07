@@ -30,13 +30,13 @@ class ImpGangBoss(Card):
     @whenever(Card.deal_damage)
     def effect(self, this, amount, target):
         if self is target:
-            self.summon(Card.fromid("BRM_006t"))
+            self.summon(self.child_card())
 
 
 class InfestedWolf(Card):
     def deathrattle(self):
         for _ in range(2):
-            self.summon(Card.fromid("OG_216a"))
+            self.summon(self.child_card())
 
 
 class MonstrousMacaw(Card):
@@ -55,13 +55,13 @@ class MonstrousMacaw(Card):
 class RatPack(Card):
     def deathrattle(self):
         for _ in range(self.atk):
-            self.summon(Card.fromid("CFM_316t"))
+            self.summon(self.child_card())
 
 
 class ReplicatingMenace(Card):
     def deathrattle(self):
         for _ in range(3):
-            self.summon(Card.fromid("BOT_312t"))
+            self.summon(self.child_card())
 
 
 class SoulJuggler(Card):

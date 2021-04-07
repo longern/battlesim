@@ -16,8 +16,7 @@ class RedWhelp(Card):
 
 class Scallywag(Card):
     def deathrattle(self):
-        pirate = Card.fromid("TB_BaconUps_141t" if self.premium else "BGS_061t")
-        self.summon(pirate)
+        self.summon(self.child_card())
 
 
 class SkyPirate(Card):

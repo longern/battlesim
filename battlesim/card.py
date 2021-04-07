@@ -2,15 +2,34 @@ import json
 import logging
 import pathlib
 import re
-from typing import List
+from functools import lru_cache
+from typing import Any, Dict, List
 
 from .event import after, register_action, whenever
 from .minion_types import MinionType
+from .tag import BooleanTag, IntegerTag
 from .view import view
 
-cards_data_file_path = pathlib.Path(__file__).parent / "downloads/cards.json"
-with open(cards_data_file_path, "r") as cards_data_file:
-    cards_data = {card["id"]: card for card in json.load(cards_data_file)}
+
+@lru_cache(maxsize=1)
+def get_cards_data() -> Dict[str, Dict[str, Any]]:
+    cards_data_file_path = pathlib.Path(__file__).parent / "downloads/cards.json"
+    with open(cards_data_file_path, "r") as cards_data_file:
+        cards_data = {card["id"]: card for card in json.load(cards_data_file)}
+    return cards_data
+
+
+def infer_child_card_id(parent_id):
+    candidates = [
+        key
+        for key in get_cards_data().keys()
+        if key.startswith(parent_id) and key != parent_id
+    ]
+    if len(candidates) != 1:
+        raise AttributeError(
+            f"Child ID not defined and cannot be inferred. Candidates: {candidates}"
+        )
+    return candidates[0]
 
 
 def choice(seq):
@@ -29,19 +48,24 @@ def pick_attacked_target(minions):
 
 
 class Card:
+    tech_level = IntegerTag(1)
+    atk = IntegerTag()
+    health = IntegerTag()
+
+    divine_shield = BooleanTag()
+    poisonous = BooleanTag()
+    premium = BooleanTag()
+    reborn = BooleanTag()
+    taunt = BooleanTag()
+    windfury = BooleanTag()
+
     def __init__(self, **kwargs):
-        self.name = "Unknown"
+        self.name = "?"
         self.minion_type = None
         self.attacking = False
         self.burst = False
-        self.divine_shield = False
         self.num_of_attacks = 0
         self.poisoned = False
-        self.poisonous = False
-        self.premium = 0
-        self.reborn = False
-        self.taunt = False
-        self.windfury = False
 
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -117,7 +141,7 @@ class Card:
     @classmethod
     def fromid(cls, card_id: str, **kwargs):
         try:
-            card_data: dict = cards_data[card_id]
+            card_data = get_cards_data()[card_id]
         except KeyError:
             logging.error("Card %d not found.", card_id)
             return None
@@ -125,12 +149,8 @@ class Card:
         # Load effect
         from . import effects
 
-        class_name = "".join(
-            map(
-                str.capitalize,
-                re.sub(r"[^ 0-9A-Za-z]", "", card_data["name"]).split(" "),
-            )
-        )
+        words = re.sub(r"[^ 0-9A-Za-z]", "", card_data["name"]).split(" ")
+        class_name = "".join(map(str.capitalize, words))
         if hasattr(effects, class_name):
             cls = getattr(effects, class_name)
 
@@ -164,7 +184,7 @@ class Card:
     def random(cls, **kwargs):
         candidates = [
             card["id"]
-            for card in cards_data
+            for card in get_cards_data()
             if all(card.get(key) == value for key, value in kwargs.items())
         ]
 
@@ -177,6 +197,15 @@ class Card:
     def adjacent_minions(self) -> List["Card"]:
         index = self.controller.minions.index(self)
         return self.controller.minions[max(index - 1, 0), index + 1 : 2]
+
+    def child_card(self) -> str:
+        if not self.premium and hasattr(self.__class__, "normal_child"):
+            child_card_id = self.__class__.normal_child
+        elif self.premium and hasattr(self.__class__, "premium_child"):
+            child_card_id = self.__class__.premium_child
+        else:
+            child_card_id = infer_child_card_id(self.card_id)
+        return Card.fromid(child_card_id)
 
     @property
     def enemy_minions(self) -> List["Card"]:

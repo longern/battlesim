@@ -57,7 +57,7 @@ class Junkbot(Card):
 
 class MechanoEgg(Card):
     def deathrattle(self):
-        self.summon(Card.fromid("BOT_537t"))
+        self.summon(self.child_card())
 
 
 class QirajiHarbinger(Card):
@@ -71,7 +71,7 @@ class QirajiHarbinger(Card):
 class RingMatron(Card):
     def deathrattle(self):
         for _ in range(2):
-            self.summon(Card.fromid("DMF_533t"))
+            self.summon(self.child_card())
 
 
 class RipsnarlCaptain(Card):
@@ -88,14 +88,14 @@ class RipsnarlCaptain(Card):
 class SavannahHighmane(Card):
     def deathrattle(self):
         for _ in range(2):
-            self.summon(Card.fromid("DMF_533t"))
+            self.summon(self.child_card())
 
 
 class SecurityRover(Card):
     @whenever(Card.deal_damage)
     def effect(self, this, amount, card: Card):
         if self is this:
-            self.summon(Card.fromid("BOT_218t"))
+            self.summon(self.child_card())
 
 
 class WildfileElemental(Card):

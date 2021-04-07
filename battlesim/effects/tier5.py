@@ -4,7 +4,7 @@ from ..card import Card, choice, after, whenever
 
 class IronhideDirehorn(Card):
     def overkill(self):
-        self.summon(Card.fromid("TRL_232t"))
+        self.summon(self.child_card())
 
 
 class KingBagurgle(Card):
@@ -44,7 +44,9 @@ class SneedsOldShredder(Card):
 
 
 class Voidlord(Card):
+    normal_child = "CS2_065"
+
     def deathrattle(self):
         # Summon three 1/3 Demons with Taunt.
         for _ in range(3):
-            self.summon(Card.fromid("LOOT_368"))
+            self.summon(self.child_card())
