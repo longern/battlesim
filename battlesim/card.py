@@ -7,7 +7,6 @@ from typing import Any, Dict, List
 
 from .event import after, register_action, whenever
 from .minion_types import MinionType
-from .tag import BooleanTag, IntegerTag
 from .view import view
 
 
@@ -48,17 +47,17 @@ def pick_attacked_target(minions):
 
 
 class Card:
-    tech_level = IntegerTag(1)
-    atk = IntegerTag()
-    health = IntegerTag()
+    tech_level = 1
+    atk = 0
+    health = 0
 
-    divine_shield = BooleanTag()
-    poisonous = BooleanTag()
-    premium = BooleanTag()
-    reborn = BooleanTag()
-    taunt = BooleanTag()
-    to_be_destroyed = BooleanTag()
-    windfury = BooleanTag()
+    divine_shield = False
+    poisonous = False
+    premium = False
+    reborn = False
+    taunt = False
+    to_be_destroyed = False
+    windfury = False
 
     def __init__(self, **kwargs):
         self.name = "?"
