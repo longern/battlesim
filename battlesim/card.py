@@ -57,6 +57,7 @@ class Card:
     premium = BooleanTag()
     reborn = BooleanTag()
     taunt = BooleanTag()
+    to_be_destroyed = BooleanTag()
     windfury = BooleanTag()
 
     def __init__(self, **kwargs):
@@ -65,7 +66,6 @@ class Card:
         self.attacking = False
         self.burst = False
         self.num_of_attacks = 0
-        self.poisoned = False
 
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -103,7 +103,7 @@ class Card:
             self.overkill()
 
         if isinstance(self, Card) and self.poisonous:
-            card.poisoned = True
+            card.to_be_destroyed = True
 
     def gain(self, atk, health, permanently=False):
         self.atk += atk
@@ -197,6 +197,10 @@ class Card:
     def adjacent_minions(self) -> List["Card"]:
         index = self.controller.minions.index(self)
         return self.controller.minions[max(index - 1, 0), index + 1 : 2]
+
+    @property
+    def alive(self) -> bool:
+        return self.health > 0 and not self.to_be_destroyed
 
     def child_card(self) -> str:
         if not self.premium and hasattr(self.__class__, "normal_child"):

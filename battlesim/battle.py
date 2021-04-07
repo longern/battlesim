@@ -49,7 +49,7 @@ class Game:
 def check_death(game: Game):
     for player in game.players:
         for minion in player.minions[:]:
-            if minion.health <= 0 or minion.poisoned:
+            if not minion.alive:
                 minion.index = player.minions.index(minion)
                 player.minions.remove(minion)
                 minion.die()

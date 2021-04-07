@@ -50,6 +50,6 @@ class Frenzy(Keyword):
 
     @after(Card.deal_damage)
     def effect(self, this, amount, card: "Card"):
-        if self is card and self.health > 0 and not self.poisoned and not self.burst:
+        if self is card and self.alive and not self.burst:
             self.burst = True
             self.frenzy()

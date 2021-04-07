@@ -85,5 +85,5 @@ class WaxriderTogwaggle(Card):
 class YoHoOgre(Card):
     @whenever(Card.attack)
     def effect(self, this, defender):
-        if self is defender and self.health > 0 and not self.poisoned:
+        if self is defender and self.alive:
             self.attack()

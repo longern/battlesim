@@ -5,7 +5,7 @@ from ..view import view
 
 @view
 def alive(minions):
-    return filter(lambda minion: minion.health > 0 and not minion.poisoned, minions)
+    return filter(lambda minion: minion.alive, minions)
 
 
 class Bigfernal(Card):
