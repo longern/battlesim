@@ -38,6 +38,7 @@ class Card:
         self.num_of_attacks = 0
         self.poisoned = False
         self.poisonous = False
+        self.premium = 0
         self.reborn = False
         self.taunt = False
         self.windfury = False
