@@ -184,7 +184,7 @@ class Card:
     def random(cls, **kwargs):
         candidates = [
             card["id"]
-            for card in get_cards_data()
+            for card in get_cards_data().values()
             if all(card.get(key) == value for key, value in kwargs.items())
         ]
 

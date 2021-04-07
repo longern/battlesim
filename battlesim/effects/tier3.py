@@ -61,7 +61,7 @@ class RatPack(Card):
 class ReplicatingMenace(Card):
     def deathrattle(self):
         for _ in range(3):
-            self.summon(self.child_card())
+            self.summon(Card.fromid("TB_BaconUps_032t" if self.premium else "BOT_312t"))
 
 
 class SoulJuggler(Card):

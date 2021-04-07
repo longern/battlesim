@@ -40,7 +40,7 @@ class SeabreakerGoliath(Card):
 class SneedsOldShredder(Card):
     def deathrattle(self):
         # Summon a random Legendary minion.
-        self.summon(Card.random(rarity="LEGENDARY"))
+        self.summon(Card.random(cardtype="MINION", rarity="LEGENDARY"))
 
 
 class Voidlord(Card):
