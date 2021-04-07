@@ -18,7 +18,8 @@ def get_cards_data() -> Dict[str, Dict[str, Any]]:
     return cards_data
 
 
-def infer_child_card_id(parent_id):
+@lru_cache(maxsize=None)
+def infer_child_card_id(parent_id: str) -> str:
     candidates = [
         key
         for key in get_cards_data().keys()
@@ -170,7 +171,7 @@ class Card:
 
         # Load keywords from card text.
         text_match = re.match(
-            r"^(<b>[A-Za-z ]*</b>(?:\s|$))*", card_data.get("text", "")
+            r"^(<b>[A-Za-z ]*</b>(?:\W|$))*", card_data.get("text", "")
         )
         group = text_match.group() if text_match else ""
         keywords = re.findall("<b>([A-Za-z ]*)</b>", group)
