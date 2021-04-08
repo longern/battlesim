@@ -24,7 +24,12 @@ class BolvarFireblood(Card):
 
 
 class CaveHydra(Card):
-    """Also damages the minions next to whomever this attacks."""
+    @after(Card.attack)
+    def effect(self, this, defender):
+        """Also damages the minions next to whomever this attacks."""
+        if self is this:
+            for minion in defender.adjacent_minions:
+                self.deal_damage(self.atk, minion)
 
 
 class ChampionOfYshaarj(Card):

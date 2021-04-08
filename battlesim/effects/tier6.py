@@ -11,6 +11,15 @@ class DreadAdmiralEliza(Card):
                 minion.gain(2 * self.tip, self.tip)
 
 
+class FoeReaper4000(Card):
+    @after(Card.attack)
+    def effect(self, this, defender):
+        """Also damages the minions next to whomever this attacks."""
+        if self is this:
+            for minion in defender.adjacent_minions:
+                self.deal_damage(self.atk, minion)
+
+
 class GentleDjinni(Card):
     def deathrattle(self):
         """Summon another random Elemental and add a copy of it to your hand."""

@@ -201,7 +201,8 @@ class Card:
         candidates = [
             card["id"]
             for card in get_cards_data().values()
-            if all(card.get(key) == value for key, value in kwargs.items())
+            if "techLevel" in card
+            and all(card.get(key) == value for key, value in kwargs.items())
         ]
 
         if not candidates:
@@ -212,7 +213,7 @@ class Card:
     @property
     def adjacent_minions(self) -> List["Card"]:
         index = self.controller.minions.index(self)
-        return self.controller.minions[abs(index - 1) : index + 1 : 2]
+        return self.controller.minions[abs(index - 1) : index + 2 : 2]
 
     @property
     def alive(self) -> bool:
