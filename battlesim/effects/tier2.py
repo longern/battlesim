@@ -4,9 +4,9 @@ from ..card import Card, choice, after, whenever
 
 class GlyphGuardian(Card):
     @whenever(Card.attack)
-    def effect(self, this, defender=None):
+    def effect(self, this, defender):
         if self is this:
-            self.atk *= 2
+            self.atk *= 1 + self.tip
 
 
 class HarvestGolem(Card):
@@ -26,7 +26,8 @@ class Imprisoner(Card):
 
 class KaboomBot(Card):
     def deathrattle(self):
-        self.deal_damage(4, choice(self.enemy_minions))
+        for _ in range(self.tip):
+            self.deal_damage(4, choice(self.enemy_minions))
 
 
 class KindlyGrandmother(Card):
@@ -59,7 +60,7 @@ class SouthseaCaptain(Card):
 class SpawnOfNzoth(Card):
     def deathrattle(self):
         for minion in self.friendly_minions:
-            minion.gain(1, 1)
+            minion.gain(self.tip, self.tip)
 
 
 class TormentedRitualist(Card):
@@ -67,7 +68,7 @@ class TormentedRitualist(Card):
     def effect(self, this, defender):
         if self is defender:
             for minion in self.adjacent_minions:
-                minion.gain(1, 1)
+                minion.gain(self.tip, self.tip)
 
 
 class UnstableGhoul(Card):

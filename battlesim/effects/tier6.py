@@ -5,10 +5,10 @@ from ..card import Card, choice, after, whenever
 
 class DreadAdmiralEliza(Card):
     @whenever(Card.attack)
-    def effect(self, this, defender=None):
+    def effect(self, this, defender):
         if self.controller is this.controller and this in MinionType.Pirate:
             for minion in self.friendly_minions:
-                minion.gain(2, 1)
+                minion.gain(2 * self.tip, self.tip)
 
 
 class GentleDjinni(Card):
@@ -19,8 +19,7 @@ class GentleDjinni(Card):
 class GoldrinnTheGreatWolf(Card):
     def deathrattle(self):
         for minion in self.friendly_minions | MinionType.Beast:
-            minion.atk += 5
-            minion.health += 5
+            minion.gain(5 * self.tip, 5 * self.tip)
 
 
 class NadinaTheRed(Card):

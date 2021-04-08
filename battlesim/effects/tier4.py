@@ -12,7 +12,7 @@ class Bigfernal(Card):
     @after(Card.summon)
     def effect(self, this, card):
         if self.controller is card.controller and card in MinionType.Demon:
-            self.gain(1, 1, permanently=True)
+            self.gain(self.tip, self.tip, permanently=True)
 
 
 class BolvarFireblood(Card):
@@ -20,7 +20,7 @@ class BolvarFireblood(Card):
     def effect(self, this):
         """After a friendly minion loses Divine Shield, gain +2 Attack."""
         if self.controller is this.controller:
-            self.gain(2, 0)
+            self.gain(2 * self.tip, 0)
 
 
 class CaveHydra(Card):
@@ -32,7 +32,7 @@ class ChampionOfYshaarj(Card):
     def effect(self, this, defender):
         """Whenever a friendly Taunt minion is attacked, gain +1/+1 permanently."""
         if self.controller is defender.controller and defender.taunt:
-            self.gain(1, 1, permanently=True)
+            self.gain(self.tip, self.tip, permanently=True)
 
 
 class DrakonidEnforcer(Card):
@@ -40,19 +40,19 @@ class DrakonidEnforcer(Card):
     def effect(self, this):
         """After a friendly minion loses Divine Shield, gain +2/+2."""
         if self.controller is this.controller:
-            self.gain(2, 2)
+            self.gain(2 * self.tip, 2 * self.tip)
 
 
 class HeraldOfFlame(Card):
     def overkill(self):
-        self.deal_damage(3, next(self.enemy_minions | alive, None))
+        self.deal_damage(3 * self.tip, next(self.enemy_minions | alive, None))
 
 
 class Junkbot(Card):
     @whenever(Card.die)
     def effect(self, this):
         if self.controller is this.controller and this in MinionType.Mechanical:
-            self.gain(2, 2)
+            self.gain(2 * self.tip, 2 * self.tip)
 
 
 class MechanoEgg(Card):
@@ -65,7 +65,7 @@ class QirajiHarbinger(Card):
     def effect(self, this):
         if self.controller == this.controller and this.taunt:
             for minion in this.adjacent_minions:
-                minion.gain(2, 2)
+                minion.gain(2 * self.tip, 2 * self.tip)
 
 
 class RingMatron(Card):
@@ -82,7 +82,7 @@ class RipsnarlCaptain(Card):
             and self.controller is this.controller
             and this in MinionType.Pirate
         ):
-            this.gain(2, 2)
+            this.gain(2 * self.tip, 2 * self.tip)
 
 
 class SavannahHighmane(Card):

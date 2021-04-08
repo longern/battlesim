@@ -2,7 +2,7 @@ import json
 import logging
 import pathlib
 import re
-from functools import lru_cache
+from functools import lru_cache, wraps
 from typing import Any, Dict, List
 
 from .event import after, register_action, whenever
@@ -73,26 +73,42 @@ class Card:
     def __repr__(self):
         return f"<Card({self.name}, {self.atk}, {self.health})>"
 
+    def propose_defender(func):
+        @wraps(func)
+        def wrapper(self, defender=...):
+            if defender is ...:
+                defender = pick_attacked_target(self.enemy_minions)
+
+            if defender is not None:
+                return func(self, defender)
+
+        return wrapper
+
+    @propose_defender
     @register_action
-    def attack(self, defender=None):
-        if defender is None:
-            defender = pick_attacked_target(self.enemy_minions)
+    def attack(self, defender):
+        self.attacking = True
+        self.deal_damage(self.atk, defender)
+        defender.deal_damage(defender.atk, self)
+        self.attacking = False
 
-        if defender is not None:
-            self.attacking = True
-            self.deal_damage(self.atk, defender)
-            defender.deal_damage(defender.atk, self)
-            self.attacking = False
+    def predamage(func):
+        @wraps(func)
+        def wrapper(self, amount: int, card: "Card"):
+            if amount <= 0 or not card:
+                return
 
+            if card.divine_shield:
+                card.lose_divine_shield()
+                return
+
+            return func(self, amount, card)
+
+        return wrapper
+
+    @predamage
     @register_action
     def deal_damage(self, amount: int, card: "Card"):
-        if amount <= 0 or not card:
-            return
-
-        if card.divine_shield:
-            card.lose_divine_shield()
-            return
-
         card.health -= amount
 
         if (
@@ -196,7 +212,7 @@ class Card:
     @property
     def adjacent_minions(self) -> List["Card"]:
         index = self.controller.minions.index(self)
-        return self.controller.minions[max(index - 1, 0), index + 1 : 2]
+        return self.controller.minions[abs(index - 1) : index + 1 : 2]
 
     @property
     def alive(self) -> bool:
@@ -226,3 +242,7 @@ class Card:
     @property
     def other(self):
         return view(lambda iterable: filter(lambda x: x is not self, iterable))
+
+    @property
+    def tip(self):
+        return 2 if self.premium else 1

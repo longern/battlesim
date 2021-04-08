@@ -26,15 +26,14 @@ class MamaBear(Card):
     @whenever(Card.summon)
     def effect(self, this, card, before=None):
         if self.controller == card.controller and card in MinionType.Beast:
-            card.atk += 4
-            card.health += 4
+            card.gain(4 * self.tip, 4 * self.tip)
 
 
 class SeabreakerGoliath(Card):
     def overkill(self):
         """Overkill: Give your other Pirates +2/+2."""
         for minion in self.friendly_minions | self.other | MinionType.Pirate:
-            minion.gain(2, 2)
+            minion.gain(2 * self.tip, 2 * self.tip)
 
 
 class SneedsOldShredder(Card):

@@ -5,13 +5,15 @@ from ..card import Card, after, choice, whenever
 class FiendishServant(Card):
     def deathrattle(self):
         if self.friendly_minions:
-            choice(self.friendly_minions).atk += self.atk
+            for _ in range(self.tip):
+                choice(self.friendly_minions).atk += self.atk
 
 
 class RedWhelp(Card):
     def start_of_combat(self):
         amount = len(list(self.friendly_minions | MinionType.Dragon))
-        self.deal_damage(amount, choice(self.enemy_minions))
+        for _ in range(self.tip):
+            self.deal_damage(amount, choice(self.enemy_minions))
 
 
 class Scallywag(Card):
@@ -32,7 +34,7 @@ class ScavengingHyena(Card):
     @whenever(Card.die)
     def effect(self, this):
         if self.controller is this.controller and this in MinionType.Beast:
-            self.gain(2, 1)
+            self.gain(2 * self.tip, self.tip)
 
 
 class SelflessHero(Card):
