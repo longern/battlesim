@@ -63,6 +63,8 @@ class Card:
     def __init__(self, **kwargs):
         self.name = "?"
         self.minion_type = None
+        self.enchantments = []
+
         self.attacking = False
         self.burst = False
         self.num_of_attacks = 0

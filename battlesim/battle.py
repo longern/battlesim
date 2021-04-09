@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from battlesim.effects import enchantments
 import random
 from collections import defaultdict
 from functools import cached_property
@@ -58,8 +59,9 @@ def check_death(game: Game):
 def battle(game: Game):
     for player in game.players:
         for minion in player.minions:
-            if hasattr(minion, "start_of_combat"):
-                minion.start_of_combat()
+            for entity in [minion, *minion.enchantments]:
+                if hasattr(entity, "start_of_combat"):
+                    entity.start_of_combat()
     check_death(game)
 
     current_player_iter = cycle(game.players)
@@ -110,11 +112,19 @@ def parse_battlefield(player_minions_stats) -> Game:
                     minion = Card.fromid(card_id, atk=attack, health=health)
                 else:
                     minion = Card(atk=attack, health=health)
-                for arg in filter(lambda arg: issubclass(arg, Keyword), args):
-                    setattr(minion, arg.as_attribute(), True)
+                for arg in args:
+                    if isinstance(arg, str):
+                        enchantment = Card.fromid(arg)
+                        minion.enchantments.append(enchantment)
+                        enchantment.attached = minion
+                    elif issubclass(arg, Keyword):
+                        setattr(minion, arg.as_attribute(), True)
             minion.controller = player
             player.minions.append(minion)
-            if hasattr(minion, "effect"):
-                game.dispatcher[minion.effect.condition].append((minion, minion.effect))
+            for entity in (minion, *minion.enchantments):
+                if hasattr(entity, "effect"):
+                    game.dispatcher[minion.effect.condition].append(
+                        (minion, entity.effect)
+                    )
 
     return game
