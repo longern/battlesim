@@ -20,13 +20,14 @@ def follow(filepath: str):
             yield line
 
 
-def simulate_combat(friendly_minions, enemy_minions):
+def simulate_combat(enemy_hero, friendly_minions, enemy_minions):
     result_counter = Counter({1: 0, 0: 0, -1: 0})
     for _ in range(1000):
         game = Game()
         game.players[0].minions = deepcopy(friendly_minions)
         for minion in game.players[0].minions:
             minion.controller = game.players[0]
+        game.players[1].hero = enemy_hero
         game.players[1].minions = deepcopy(enemy_minions)
         for minion in game.players[1].minions:
             minion.controller = game.players[1]
@@ -76,7 +77,7 @@ def combat_round(line_iter):
                         if controller_match:
                             card.controller = int(controller_match.group(1))
                             break
-                    if card.cardtype == "MINION":
+                    if card.cardtype in ("HERO", "MINION"):
                         entities[int(entity_id)] = card
                 elif tag_change_match:
                     entity_id, tag, value = tag_change_match.groups()
@@ -92,25 +93,42 @@ def combat_round(line_iter):
                             entity
                             for entity in entities.values()
                             if entity.controller == player_id
-                        ]
-                    )
-                    print(
+                            and entity.cardtype == "MINION"
+                        ],
+                        next(
+                            filter(
+                                lambda entity: entity.controller == player_id + 8
+                                and entity.cardtype == "HERO",
+                                entities.values(),
+                            )
+                        ).name,
                         [
                             entity
                             for entity in entities.values()
                             if entity.controller == player_id + 8
+                            and entity.cardtype == "MINION"
                         ],
+                        sep="\n",
                     )
                     simulate_combat(
+                        next(
+                            filter(
+                                lambda entity: entity.controller == player_id
+                                and entity.cardtype == "MINION",
+                                entities.values(),
+                            )
+                        ),
                         [
                             entity
                             for entity in entities.values()
                             if entity.controller == player_id
+                            and entity.cardtype == "MINION"
                         ],
                         [
                             entity
                             for entity in entities.values()
                             if entity.controller == player_id + 8
+                            and entity.cardtype == "MINION"
                         ],
                     )
                     print(f"Combat of turn {turn // 2} ends.")
