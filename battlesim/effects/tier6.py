@@ -25,13 +25,36 @@ class GentleDjinni(Card):
         """Summon another random Elemental and add a copy of it to your hand."""
 
 
+class Ghastcoiler(Card):
+    def deathrattle(self):
+        for _ in range(2 * self.tip):
+            self.summon(
+                Card.random(mechanics__contains="DEATHRATTLE", cardtype="MINION")
+            )
+
+
 class GoldrinnTheGreatWolf(Card):
     def deathrattle(self):
         for minion in self.friendly_minions | MinionType.Beast:
             minion.gain(5 * self.tip, 5 * self.tip)
 
 
+class ImpMama(Card):
+    @whenever(Card.deal_damage)
+    def effect(self, this, amount, card):
+        if self is card:
+            random_demon = Card.random(race="DEMON")
+            self.summon(random_demon)
+            random_demon.taunt = True
+
+
 class NadinaTheRed(Card):
     def deathrattle(self):
         for minion in self.friendly_minions | MinionType.Dragon:
             minion.divine_shield = True
+
+
+class TheTideRazor(Card):
+    def deathrattle(self):
+        for _ in range(3 * self.tip):
+            self.summon(Card.random(race="PIRATE"))
