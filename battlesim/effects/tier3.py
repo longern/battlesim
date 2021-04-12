@@ -8,21 +8,21 @@ class ArmOfTheEmpire(Card):
     def effect(self, this, defender):
         """Whenever a friendly Taunt minion is attacked, give it +2 Attack permanently."""
         if self.controller is defender.controller and defender.taunt:
-            defender.gain(2, 0, permanently=True)
+            defender.gain(2 * self.tip, 0, permanently=True)
 
 
 class BarrensBlacksmith(Card, Frenzy):
     def frenzy(self):
         """Frenzy: Give your other minions +2/+2."""
         for minion in self.friendly_minions | self.other:
-            minion.gain(2, 2)
+            minion.gain(2 * self.tip, 2 * self.tip)
 
 
-class DeflectOBot(Card):
+class Deflectobot(Card):
     @whenever(Card.summon)
     def effect(self, this, card):
-        if self.controller is card.controller and card in MinionType.Mechanical:
-            self.atk += 1
+        if self.controller is this.controller and card in MinionType.Mechanical:
+            self.atk += self.tip
             self.divine_shield = True
 
 
@@ -37,6 +37,22 @@ class InfestedWolf(Card):
     def deathrattle(self):
         for _ in range(2):
             self.summon(self.child_card())
+
+
+class Khadgar(Card):
+    @after(Card.summon)
+    def effect(self, this, card: Card):
+        if self.controller is this.controller and not getattr(card, "khadgar", False):
+            card.copied_by_khadgar = True
+            for _ in range(self.tip):
+                copy = Card.fromid(card.card_id)
+                copy.atk = card.atk
+                copy.health = card.health
+                copy.damage = card.damage
+                copy.reborn = card.reborn
+                copy.khadgar = True
+                card.index = card.friendly_minions.index(card) + 1
+                card.summon(copy)
 
 
 class MonstrousMacaw(Card):

@@ -14,6 +14,7 @@ class Player:
     def __init__(self, game):
         self.game = game
         self.hero = None
+        self.hero_power = None
         self.minions: List[Card] = []
         self.active_minion = None
 
@@ -51,13 +52,20 @@ def check_death(game: Game):
     for player in game.players:
         for minion in player.minions[:]:
             if not minion.alive:
-                minion.index = player.minions.index(minion)
-                player.minions.remove(minion)
-                minion.die()
+                try:
+                    minion.index = player.minions.index(minion)
+                    player.minions.remove(minion)
+                    minion.die()
+                except ValueError:
+                    pass
 
 
 def battle(game: Game):
+    game.dispatcher["after_attack"].append((game, lambda *_: check_death(game)))
+
     for player in game.players:
+        if hasattr(player.hero_power, "start_of_combat"):
+            player.hero_power.start_of_combat()
         for minion in player.minions:
             for entity in [minion, *minion.enchantments]:
                 if hasattr(entity, "start_of_combat"):
@@ -85,14 +93,12 @@ def battle(game: Game):
             if active_minion is None:
                 continue
         active_minion.attack()
-        check_death(game)
 
         if (
             getattr(active_minion, "windfury", False)
             and active_minion in game.current_player.minions
         ):
             active_minion.attack()
-            check_death(game)
 
         active_minion.num_of_attacks += 1
 

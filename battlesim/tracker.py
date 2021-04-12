@@ -6,6 +6,7 @@ from .card import Card
 from .battle import Game, battle
 from copy import deepcopy
 from collections import Counter
+from itertools import chain
 
 
 def follow(filepath: str):
@@ -31,6 +32,9 @@ def simulate_combat(enemy_hero, friendly_minions, enemy_minions):
         game.players[1].minions = deepcopy(enemy_minions)
         for minion in game.players[1].minions:
             minion.controller = game.players[1]
+        for entity in chain(game.players[0].minions, game.players[1].minions):
+            if hasattr(entity, "effect"):
+                game.dispatcher[entity.effect.condition].append((entity, entity.effect))
         result_counter[battle(game)] += 1
     print({k: f"{round(v / 1000 * 100, 2)}%" for k, v in result_counter.items()})
 
@@ -60,6 +64,9 @@ def combat_round(line_iter):
                 full_entity_match = re.search(
                     "FULL_ENTITY - Creating ID=(\d+) CardID=([\S]+)", line
                 )
+                show_entity_match = re.search(
+                    "SHOW_ENTITY - Updating Entity=(\d+) CardID=([\S]+)", line
+                )
                 tag_change_match = re.search(
                     "TAG_CHANGE Entity=(\d+) tag=(\S+) value=(\S+)",
                     line,
@@ -79,6 +86,21 @@ def combat_round(line_iter):
                             break
                     if card.cardtype in ("HERO", "MINION"):
                         entities[int(entity_id)] = card
+                elif show_entity_match:
+                    entity_id, card_id = show_entity_match.groups()
+                    card = Card.fromid(card_id)
+                    while True:
+                        line = next(line_iter)
+                        controller_match = re.search("tag=CONTROLLER value=(\d+)", line)
+                        attached_match = re.search("tag=ATTACHED value=(\d+)", line)
+                        if controller_match:
+                            card.controller = int(controller_match.group(1))
+                        elif attached_match:
+                            attached = entities[int(attached_match.group(1))]
+                            attached.enchantments.append(card)
+                            card.attached = attached
+                            break
+                    entities[int(entity_id)] = card
                 elif tag_change_match:
                     entity_id, tag, value = tag_change_match.groups()
                     if int(entity_id) in entities and not tag.isdigit():
@@ -113,8 +135,8 @@ def combat_round(line_iter):
                     simulate_combat(
                         next(
                             filter(
-                                lambda entity: entity.controller == player_id
-                                and entity.cardtype == "MINION",
+                                lambda entity: entity.controller == player_id + 8
+                                and entity.cardtype == "HERO",
                                 entities.values(),
                             )
                         ),

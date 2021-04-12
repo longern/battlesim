@@ -24,7 +24,7 @@ class BolvarFireblood(Card):
 
 
 class CaveHydra(Card):
-    @after(Card.attack)
+    @whenever(Card.attack)
     def effect(self, this, defender):
         """Also damages the minions next to whomever this attacks."""
         if self is this:

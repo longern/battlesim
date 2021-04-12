@@ -42,6 +42,7 @@ def choice(seq):
 
 
 def pick_attacked_target(minions):
+    minions = [minion for minion in minions if minion.alive]
     if any(minion.taunt for minion in minions):
         minions = [minion for minion in minions if minion.taunt]
     return choice(minions)
@@ -67,10 +68,14 @@ class Card:
 
         self.attacking = False
         self.burst = False
+        self.damage = 0
         self.num_of_attacks = 0
 
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+        if getattr(self, "start_with_1_health", False):
+            self.damage = self.health - 1
 
     def __repr__(self):
         return f"<Card({self.name}, {self.atk}, {self.health})>"
@@ -111,10 +116,10 @@ class Card:
     @predamage
     @register_action
     def deal_damage(self, amount: int, card: "Card"):
-        card.health -= amount
+        card.damage += amount
 
         if (
-            card.health < 0
+            card.damage > card.health
             and hasattr(self, "overkill")
             and self.controller is self.game.current_player
         ):
@@ -131,7 +136,7 @@ class Card:
     def die(self):
         self.trigger("Deathrattle")
         if self.reborn:
-            self.summon(Card.fromid(self.card_id, health=1, reborn=False))
+            self.summon(Card.fromid(self.card_id, start_with_1_health=1, reborn=False))
 
     @register_action
     def lose_divine_shield(self):
@@ -189,7 +194,7 @@ class Card:
 
         # Load keywords from card text.
         text_match = re.match(
-            r"^(<b>[A-Za-z ]*</b>(?:\W|$))*", card_data.get("text", "")
+            r"^(?:\[x\])?(<b>[A-Za-z ]*</b>(?:\W|$))*", card_data.get("text", "")
         )
         group = text_match.group() if text_match else ""
         keywords = re.findall("<b>([A-Za-z ]*)</b>", group)
@@ -219,7 +224,7 @@ class Card:
 
     @property
     def alive(self) -> bool:
-        return self.health > 0 and not self.to_be_destroyed
+        return self.damage < self.health and not self.to_be_destroyed
 
     def child_card(self) -> str:
         if not self.premium and hasattr(self.__class__, "normal_child"):
