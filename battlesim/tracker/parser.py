@@ -37,4 +37,10 @@ class BattlegroundParser(LogParser):
         if not isinstance(game, EntityTreeExporter.game_class):
             return None
 
+        game._entities = {
+            entity_id: entity
+            for entity_id, entity in game._entities.items()
+            if entity.zone.name != "REMOVEDFROMGAME"
+        }
+
         return game

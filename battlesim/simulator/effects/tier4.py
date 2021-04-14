@@ -1,5 +1,5 @@
-from battlesim.minion_types import MinionType
-from ..card import Card, choice, after, whenever
+from hearthstone.enums import Race
+from ..entities import Card, choice, after, whenever
 from ..view import view
 
 
@@ -11,7 +11,7 @@ def alive(minions):
 class Bigfernal(Card):
     @after(Card.summon)
     def effect(self, this, card):
-        if self.controller is card.controller and card in MinionType.Demon:
+        if self.controller is card.controller and card in Race.Demon:
             self.gain(self.tip, self.tip, permanently=True)
 
 
@@ -56,7 +56,7 @@ class HeraldOfFlame(Card):
 class Junkbot(Card):
     @whenever(Card.die)
     def effect(self, this):
-        if self.controller is this.controller and this in MinionType.Mechanical:
+        if self.controller is this.controller and this in Race.Mechanical:
             self.gain(2 * self.tip, 2 * self.tip)
 
 
@@ -85,7 +85,7 @@ class RipsnarlCaptain(Card):
         if (
             self is not this
             and self.controller is this.controller
-            and this in MinionType.Pirate
+            and this in Race.Pirate
         ):
             this.gain(2 * self.tip, 2 * self.tip)
 

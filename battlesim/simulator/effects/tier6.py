@@ -1,12 +1,12 @@
-from battlesim.minion_types import MinionType
-from ..minion_types import MinionType
-from ..card import Card, choice, after, whenever
+from hearthstone.enums import Race
+from ..minion_types import Race
+from ..entities import Card, choice, after, whenever
 
 
 class DreadAdmiralEliza(Card):
     @whenever(Card.attack)
     def effect(self, this, defender):
-        if self.controller is this.controller and this in MinionType.Pirate:
+        if self.controller is this.controller and this in Race.Pirate:
             for minion in self.friendly_minions:
                 minion.gain(2 * self.tip, self.tip)
 
@@ -35,7 +35,7 @@ class Ghastcoiler(Card):
 
 class GoldrinnTheGreatWolf(Card):
     def deathrattle(self):
-        for minion in self.friendly_minions | MinionType.Beast:
+        for minion in self.friendly_minions | Race.Beast:
             minion.gain(5 * self.tip, 5 * self.tip)
 
 
@@ -50,7 +50,7 @@ class ImpMama(Card):
 
 class NadinaTheRed(Card):
     def deathrattle(self):
-        for minion in self.friendly_minions | MinionType.Dragon:
+        for minion in self.friendly_minions | Race.Dragon:
             minion.divine_shield = True
 
 

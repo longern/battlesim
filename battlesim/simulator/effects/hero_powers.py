@@ -1,4 +1,4 @@
-from ..card import Card, after, choice, whenever
+from ..entities import Card, after, choice, whenever
 
 
 class FishOfNZoth(Card):

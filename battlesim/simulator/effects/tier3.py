@@ -1,6 +1,6 @@
-from ..minion_types import MinionType
+from ..minion_types import Race
 from ..keywords import Frenzy
-from ..card import Card, choice, after, whenever
+from ..entities import Card, choice, after, whenever
 
 
 class ArmOfTheEmpire(Card):
@@ -21,7 +21,7 @@ class BarrensBlacksmith(Card, Frenzy):
 class Deflectobot(Card):
     @whenever(Card.summon)
     def effect(self, this, card):
-        if self.controller is this.controller and card in MinionType.Mechanical:
+        if self.controller is this.controller and card in Race.Mechanical:
             self.atk += self.tip
             self.divine_shield = True
 
@@ -83,5 +83,5 @@ class ReplicatingMenace(Card):
 class SoulJuggler(Card):
     @after(Card.die)
     def effect(self, this):
-        if this in MinionType.Demon:
+        if this in Race.Demon:
             self.deal_damage(3, choice(self.enemy_minions))

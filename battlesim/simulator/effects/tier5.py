@@ -1,5 +1,5 @@
-from ..minion_types import MinionType
-from ..card import Card, choice, after, whenever
+from ..minion_types import Race
+from ..entities import Card, choice, after, whenever
 
 
 class IronhideDirehorn(Card):
@@ -10,7 +10,7 @@ class IronhideDirehorn(Card):
 class KingBagurgle(Card):
     def battlecry(self):
         """Battlecry and Deathrattle: Give your other Murlocs +2/+2."""
-        for minion in self.friendly_minions | self.other | MinionType.Murloc:
+        for minion in self.friendly_minions | self.other | Race.Murloc:
             minion.atk += 2
             minion.health += 2
 
@@ -25,14 +25,14 @@ class Malganis(Card):
 class MamaBear(Card):
     @whenever(Card.summon)
     def effect(self, this, card, before=None):
-        if self.controller == card.controller and card in MinionType.Beast:
+        if self.controller == card.controller and card in Race.Beast:
             card.gain(4 * self.tip, 4 * self.tip)
 
 
 class SeabreakerGoliath(Card):
     def overkill(self):
         """Overkill: Give your other Pirates +2/+2."""
-        for minion in self.friendly_minions | self.other | MinionType.Pirate:
+        for minion in self.friendly_minions | self.other | Race.Pirate:
             minion.gain(2 * self.tip, 2 * self.tip)
 
 

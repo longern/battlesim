@@ -1,5 +1,5 @@
-from ..minion_types import MinionType
-from ..card import Card, after, choice, whenever
+from ..minion_types import Race
+from ..entities import Card, after, choice, whenever
 
 
 class FiendishServant(Card):
@@ -11,7 +11,7 @@ class FiendishServant(Card):
 
 class RedWhelp(Card):
     def start_of_combat(self):
-        amount = len(list(self.friendly_minions | MinionType.Dragon))
+        amount = len(list(self.friendly_minions | Race.Dragon))
         for _ in range(self.tip):
             self.deal_damage(amount, choice(self.enemy_minions))
 
@@ -33,7 +33,7 @@ class SkyPirate(Card):
 class ScavengingHyena(Card):
     @whenever(Card.die)
     def effect(self, this):
-        if self.controller is this.controller and this in MinionType.Beast:
+        if self.controller is this.controller and this in Race.Beast:
             self.gain(2 * self.tip, self.tip)
 
 

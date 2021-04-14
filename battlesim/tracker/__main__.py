@@ -3,8 +3,9 @@ import logging
 from hearthstone import enums
 from hearthstone.cardxml import load
 
-from .parser import BattlegroundParser
+from ..simulator.battle import battle
 from .logfile import follow, get_log_path
+from .parser import BattlegroundParser
 
 db, _ = load(locale="zhCN")
 logging.getLogger().setLevel(logging.ERROR)
@@ -39,6 +40,8 @@ def combat_callback(parser: BattlegroundParser):
         key=lambda card: card.tags.get(enums.GameTag.ZONE_POSITION),
     )
     print(" ".join(map(card_repr, enemy_minions)))
+
+    battle(game)
 
     print(f"Combat of turn {turn} ends.")
 

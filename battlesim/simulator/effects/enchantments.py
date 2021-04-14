@@ -1,4 +1,4 @@
-from ..card import Card
+from ..entities import Card
 
 
 class RebornRite(Card):

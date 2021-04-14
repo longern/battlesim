@@ -1,5 +1,6 @@
-from battlesim.minion_types import MinionType
-from ..card import Card, choice, after, whenever
+from hearthstone.enums import Race
+
+from ..entities import Card, after, choice, whenever
 
 
 class GlyphGuardian(Card):
@@ -48,7 +49,7 @@ class OldMurkEye(Card):
 class PackLeader(Card):
     @whenever(Card.summon)
     def effect(self, this, card):
-        if this.controller == self.controller and card in MinionType.Beast:
+        if this.controller == self.controller and card in Race.Beast:
             card.atk += 2
 
 
