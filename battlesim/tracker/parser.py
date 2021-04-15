@@ -1,6 +1,7 @@
-from hslog.parser import LogParser
-from hslog.export import EntityTreeExporter
 import re
+
+from hslog.export import EntityTreeExporter
+from hslog.parser import LogParser
 
 REROLL_BUTTON_REMOVED = (
     "TAG_CHANGE.*TB_BaconShop_8p_Reroll_Button.*value=REMOVEDFROMGAME"

@@ -1,5 +1,6 @@
 from hearthstone.enums import Race
-from ..entities import Minion, choice, after, whenever
+
+from ..entities import Minion, after, choice, whenever
 
 
 class IronhideDirehorn(Minion):

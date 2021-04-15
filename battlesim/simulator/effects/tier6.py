@@ -1,5 +1,6 @@
 from hearthstone.enums import GameTag, Race
-from ..entities import Minion, choice, after, whenever
+
+from ..entities import Minion, after, choice, whenever
 
 
 class DreadAdmiralEliza(Minion):

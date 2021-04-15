@@ -1,5 +1,6 @@
-from hearthstone.enums import Race, GameTag
-from ..entities import Minion, choice, after, whenever
+from hearthstone.enums import GameTag, Race
+
+from ..entities import Minion, after, choice, whenever
 
 
 class ArmOfTheEmpire(Minion):

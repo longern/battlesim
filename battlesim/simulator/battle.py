@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import random
-from itertools import cycle
 from collections import defaultdict
+from itertools import cycle
 
-from .entities import Game, Player, Card
 from hearthstone.enums import CardType, GameTag, Zone
 
 from . import entities
+from .entities import Card, Game, Player
 
 
 def check_death(game: Game):
@@ -26,7 +26,7 @@ def extend_entities(game: Game):
     game.dispatcher = defaultdict(list)
     for entity in game.entities:
         class_name = "".join(map(str.capitalize, entity.type.name.split("_")))
-        entity.__class__ = getattr(entities, class_name)
+        entity.__class__ = getattr(entities, class_name, entities.Card)
 
 
 def battle(game: Game):
@@ -82,7 +82,7 @@ def parse_battlefield(player_minions_stats) -> Game:
         player.game = game
 
     for player, minions_stats in zip(game.players, player_minions_stats):
-        for minion_stat in minions_stats:
+        for i, minion_stat in enumerate(minions_stats):
             if isinstance(minion_stat, str):
                 minion = entities.Minion.fromid(game, minion_stat)
             else:
@@ -103,11 +103,14 @@ def parse_battlefield(player_minions_stats) -> Game:
                     if isinstance(arg, str):
                         enchantment = entities.Enchantment.fromid(game, arg)
                         enchantment.tags[GameTag.ATTACHED] = minion.id
+                        if callable(getattr(enchantment, "on_attached", None)):
+                            enchantment.on_attached()
                     elif isinstance(arg, GameTag):
                         minion.tag_change(arg, True)
             game.register_entity(minion)
             minion.tags[GameTag.CONTROLLER] = player.player_id
             minion.tags[GameTag.ZONE] = Zone.PLAY
+            minion.tags[GameTag.ZONE_POSITION] = i
             for entity in (minion, *minion.enchantments):
                 if hasattr(entity, "effect"):
                     game.dispatcher[minion.effect.condition].append(

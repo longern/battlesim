@@ -1,14 +1,15 @@
-from battlesim.simulator.battle import battle, parse_battlefield
 from collections import Counter
+
+from battlesim.simulator.battle import battle, parse_battlefield
 
 
 def calculate_winrate(friendly_minions, enemy_minions):
     result_counter = Counter()
-    for _ in range(10000):
+    for _ in range(100):
         result = battle(parse_battlefield((friendly_minions, enemy_minions)))
         result_counter[result] += 1
 
-    return {key: value / 10000 for key, value in result_counter.items()}
+    return {key: value / 100 for key, value in result_counter.items()}
 
 
 def test_prob_1():

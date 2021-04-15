@@ -36,8 +36,8 @@ def tag_getter(tag: GameTag, default=None):
         return self.tags.get(tag, default)
 
     @get_tag.setter
-    def set_tag(self, value):
-        self.update_tag(tag, value)
+    def get_tag(self, value):
+        self.tag_change(tag, value)
 
     return get_tag
 
@@ -105,6 +105,8 @@ class Card(BaseCard):
         return f"{self.name}"
 
     atk = tag_getter(GameTag.ATK)
+    attacking = tag_getter(GameTag.ATTACKING, False)
+    defending = tag_getter(GameTag.DEFENDING, False)
     divine_shield = tag_getter(GameTag.DIVINE_SHIELD, False)
     num_attacks_this_turn = tag_getter(GameTag.NUM_ATTACKS_THIS_TURN, 0)
     poisonous = tag_getter(GameTag.POISONOUS, False)
@@ -315,4 +317,6 @@ class Enchantment(Card):
     def __repr__(self):
         return f"{self.name}"
 
-    attached = tag_getter(GameTag.ATTACHED)
+    @property
+    def attached(self):
+        return self.game._entities[self.tags[GameTag.ATTACHED]]

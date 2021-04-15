@@ -1,4 +1,5 @@
 import logging
+from collections import Counter
 
 from hearthstone import enums
 from hearthstone.cardxml import load
@@ -41,7 +42,12 @@ def combat_callback(parser: BattlegroundParser):
     )
     print(" ".join(map(card_repr, enemy_minions)))
 
-    battle(game)
+    result_counter = Counter({1: 0, 0: 0, -1: 0})
+    for _ in range(1000):
+        game = parser.export_game()
+        result_counter[battle(game)] += 1
+
+    print(result_counter)
 
     print(f"Combat of turn {turn} ends.")
 

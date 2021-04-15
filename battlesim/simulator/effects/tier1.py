@@ -1,4 +1,5 @@
-from hearthstone.enums import Race, GameTag
+from hearthstone.enums import GameTag, Race
+
 from ..entities import Minion, after, choice, whenever
 
 

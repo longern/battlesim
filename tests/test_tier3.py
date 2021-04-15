@@ -1,5 +1,6 @@
-from battlesim.simulator.battle import battle, parse_battlefield
 from hearthstone.enums import GameTag
+
+from battlesim.simulator.battle import battle, parse_battlefield
 
 
 def test_crackling_cyclone():
