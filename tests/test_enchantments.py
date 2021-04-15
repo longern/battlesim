@@ -1,5 +1,4 @@
-from battlesim.battle import battle, parse_battlefield
-from battlesim.keywords import *
+from battlesim.simulator.battle import battle, parse_battlefield
 
 
 def test_reborn_rite():

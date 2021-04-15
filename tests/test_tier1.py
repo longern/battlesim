@@ -1,5 +1,5 @@
-from battlesim.battle import battle, parse_battlefield
-from battlesim.keywords import *
+from battlesim.simulator.battle import battle, parse_battlefield
+from hearthstone.enums import GameTag
 
 
 def test_acolyte_of_cthun():
@@ -15,7 +15,9 @@ def test_red_whelp():
 
 
 def test_scally_wag():
-    assert battle(parse_battlefield((["BGS_061", (4, 1, Taunt)], [(1, 4)]))) == 0
+    assert (
+        battle(parse_battlefield((["BGS_061", (4, 1, GameTag.TAUNT)], [(1, 4)]))) == 0
+    )
 
 
 def test_scavenging_hyena():

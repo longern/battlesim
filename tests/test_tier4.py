@@ -1,5 +1,5 @@
-from battlesim.battle import battle, parse_battlefield
-from battlesim.keywords import *
+from battlesim.simulator.battle import battle, parse_battlefield
+from hearthstone.enums import GameTag
 
 
 def test_herald_of_flame():
@@ -7,11 +7,13 @@ def test_herald_of_flame():
 
 
 def test_security_rover():
-    assert battle(parse_battlefield(([(2, 6, "BOT_218", Taunt)], [(6, 4)]))) == 0
+    assert (
+        battle(parse_battlefield(([(2, 6, "BOT_218", GameTag.TAUNT)], [(6, 4)]))) == 0
+    )
     assert (
         battle(
             parse_battlefield(
-                ([(6, 6, "CFM_316"), (2, 6, "BOT_218", Taunt)], [(14, 14)])
+                ([(6, 6, "CFM_316"), (2, 6, "BOT_218", GameTag.TAUNT)], [(14, 14)])
             )
         )
         == 0

@@ -1,19 +1,33 @@
-import json
 import logging
-import pathlib
 import re
+from collections import defaultdict
 from functools import lru_cache, wraps
 from typing import Any, Dict, List
 
 from hearthstone.cardxml import load
-from hearthstone.entities import (
-    Card as BaseCard,
-    Game as BaseGame,
-    Player as BasePlayer,
-)
-from hearthstone.enums import GameTag, Zone, CardType
+from hearthstone.entities import Card as BaseCard
+from hearthstone.entities import Game as BaseGame
+from hearthstone.entities import Player as BasePlayer
+from hearthstone.enums import CardType, GameTag, Zone
 
 from .event import after, register_action, whenever
+from .view import view
+
+
+def choice(seq):
+    import random
+
+    try:
+        return random.choice(seq)
+    except IndexError:
+        return None
+
+
+def pick_attacked_target(minions):
+    minions = [minion for minion in minions if minion.alive]
+    if any(minion.taunt for minion in minions):
+        minions = [minion for minion in minions if minion.taunt]
+    return choice(minions)
 
 
 def tag_getter(tag: GameTag, default=None):
@@ -29,10 +43,15 @@ def tag_getter(tag: GameTag, default=None):
 
 
 class Game(BaseGame):
+    def __init__(self, id=1):
+        super(Game, self).__init__(id)
+        self.dispatcher = defaultdict(list)
+
     def filter(self, **kwargs):
         for entity in self.entities:
             if all(
-                entity.tags[getattr(GameTag, k.upper())] == v for k, v in kwargs.items()
+                entity.tags.get(getattr(GameTag, k.upper())) == v
+                for k, v in kwargs.items()
             ):
                 yield entity
 
@@ -42,11 +61,16 @@ class Player(BasePlayer):
     def minions(self):
         return list(
             self.game.filter(
-                zone=Zone.PLAY,
-                cardtype=CardType.MINION,
-                controller=self.player_id,
+                zone=Zone.PLAY, cardtype=CardType.MINION, controller=self.player_id
             )
         )
+
+    @property
+    def opponent(self) -> "Player":
+        for player in self.game.players:
+            if player is not self:
+                return player
+        return None
 
 
 @lru_cache(maxsize=None)
@@ -63,8 +87,19 @@ def infer_child_card_id(parent_id: str) -> str:
 
 
 class Card(BaseCard):
-    def __init__(self, **kwargs):
-        super(Card, self).__init__()
+    def __init__(self, id, card_id, **kwargs):
+        try:
+            super(Card, self).__init__(id, card_id)
+
+            self.tags = self.base_tags.copy()
+        except KeyError:
+            self.tags[GameTag.CARDTYPE] = CardType.MINION
+
+        for key, value in kwargs.items():
+            self.tags[getattr(GameTag, key.upper())] = value
+
+        if kwargs.get("start_with_1_health", False):
+            self.tags[GameTag.DAMAGE] = self.tags[GameTag.HEALTH] - 1
 
     def __repr__(self):
         return f"{self.name}"
@@ -74,16 +109,21 @@ class Card(BaseCard):
     num_attacks_this_turn = tag_getter(GameTag.NUM_ATTACKS_THIS_TURN, 0)
     poisonous = tag_getter(GameTag.POISONOUS, False)
     premium = tag_getter(GameTag.PREMIUM, False)
+    reborn = tag_getter(GameTag.REBORN, False)
+    taunt = tag_getter(GameTag.TAUNT, False)
     to_be_destroyed = tag_getter(GameTag.TO_BE_DESTROYED, False)
+    windfury = tag_getter(GameTag.WINDFURY, False)
 
     @property
     def name(self):
         db, _ = load(locale="zhCN")
-        return db[self.card_id].name
+        try:
+            return db[self.card_id].name
+        except KeyError:
+            return self.card_id
 
-    @classmethod
-    def fromid(cls, card_id):
-        return cls()
+    def create(self, card_id, **kwargs):
+        return Minion.fromid(self.game, card_id, **kwargs)
 
     def propose_defender(func):
         @wraps(func)
@@ -121,10 +161,11 @@ class Card(BaseCard):
     @predamage
     @register_action
     def deal_damage(self, amount: int, card: "Card"):
-        card.damage += amount
+        card.tags.setdefault(GameTag.DAMAGE, 0)
+        card.tags[GameTag.DAMAGE] += amount
 
         if (
-            card.damage > card.health
+            card.health < 0
             and hasattr(self, "overkill")
             and self.controller is self.game.current_player
         ):
@@ -134,25 +175,26 @@ class Card(BaseCard):
             card.to_be_destroyed = True
 
     def gain(self, atk, health, permanently=False):
-        self.atk += atk
-        self.health += health
+        self.tags[GameTag.ATK] += atk
+        self.tags[GameTag.HEALTH] += health
 
     @register_action
     def die(self):
         self.trigger("Deathrattle")
         if self.reborn:
-            self.summon(Card.fromid(self.card_id, start_with_1_health=1, reborn=False))
+            self.summon(self.create(self.card_id, start_with_1_health=1, reborn=False))
 
     @register_action
     def lose_divine_shield(self):
-        self.divine_shield = False
+        self.tags[GameTag.DIVINE_SHIELD] = False
 
     @register_action
     def summon(self, card: "Card"):
         if not card or len(self.friendly_minions) >= 7:
             return
 
-        card.controller = self.controller
+        card.tags[GameTag.CONTROLLER] = self.tags[GameTag.CONTROLLER]
+        card.tags[GameTag.ZONE] = Zone.PLAY
         self.friendly_minions.insert(
             getattr(self, "index", len(self.friendly_minions)), card
         )
@@ -170,33 +212,38 @@ class Card(BaseCard):
     def fromid(cls, game: Game, card_id: str, **kwargs):
         try:
             db, _ = load()
+            card_data = db[card_id]
         except KeyError:
             logging.error("Card %d not found.", card_id)
             return None
 
         # Load effect
-        from .. import effects
+        from . import effects
 
-        words = re.sub(r"[^ 0-9A-Za-z]", "", db["name"]).split(" ")
+        words = re.sub(r"[^ 0-9A-Za-z]", "", card_data.name).split(" ")
         class_name = "".join(map(str.capitalize, words))
         if hasattr(effects, class_name):
             cls = getattr(effects, class_name)
 
-        return cls(card_id, **kwargs)
+        card: Card = cls(max(game._entities.keys(), default=0) + 1, card_id, **kwargs)
+        game.register_entity(card)
+        return card
 
     @classmethod
     def random(cls, **kwargs):
+        db, _ = load()
+
         candidates = [
-            card["id"]
-            for card in get_cards_data().values()
-            if "techLevel" in card
-            and all(card.get(key) == value for key, value in kwargs.items())
+            card.id
+            for card in db.values()
+            if GameTag.TECH_LEVEL in card.tags
+            and all(getattr(card, key) == value for key, value in kwargs.items())
         ]
 
         if not candidates:
             return None
 
-        return cls.fromid(choice(candidates))
+        return choice(candidates)
 
     @property
     def adjacent_minions(self) -> List["Card"]:
@@ -205,7 +252,7 @@ class Card(BaseCard):
 
     @property
     def alive(self) -> bool:
-        return self.damage < self.health and not self.to_be_destroyed
+        return self.health > 0 and not self.to_be_destroyed
 
     def child_card(self) -> str:
         if not self.premium and hasattr(self.__class__, "normal_child"):
@@ -214,11 +261,15 @@ class Card(BaseCard):
             child_card_id = self.__class__.premium_child
         else:
             child_card_id = infer_child_card_id(self.card_id)
-        return Card.fromid(child_card_id)
+        return Card.fromid(self.game, child_card_id)
 
     @property
-    def controller(self):
-        return self.game._entities[self.tags[GameTag.CONTROLLER]]
+    def enchantments(self):
+        return [
+            entity
+            for entity in self.game.entities
+            if entity.tags.get(GameTag.ATTACHED) == self.id
+        ]
 
     @property
     def enemy_minions(self) -> List["Card"]:
@@ -233,6 +284,10 @@ class Card(BaseCard):
                 cardtype=CardType.MINION,
             )
         )
+
+    @property
+    def health(self):
+        return self.tags[GameTag.HEALTH] - self.tags.get(GameTag.DAMAGE, 0)
 
     @property
     def other(self):
@@ -254,10 +309,6 @@ class HeroPower(Card):
 class Minion(Card):
     def __repr__(self):
         return f"{self.name}{self.atk}/{self.health}"
-
-    @property
-    def health(self):
-        return self.tags[GameTag.HEALTH] - self.tags.get(GameTag.DAMAGE, 0)
 
 
 class Enchantment(Card):

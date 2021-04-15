@@ -1,9 +1,11 @@
-from battlesim.battle import battle, parse_battlefield
-from battlesim.keywords import *
+from battlesim.simulator.battle import battle, parse_battlefield
+from hearthstone.enums import GameTag
 
 
 def test_crackling_cyclone():
-    assert battle(parse_battlefield((["BGS_119", (1, 1, Taunt)], [(1, 8)]))) == 1
+    assert (
+        battle(parse_battlefield((["BGS_119", (1, 1, GameTag.TAUNT)], [(1, 8)]))) == 1
+    )
 
 
 def test_khadgar():

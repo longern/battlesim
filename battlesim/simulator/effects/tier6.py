@@ -1,18 +1,17 @@
-from hearthstone.enums import Race
-from ..minion_types import Race
-from ..entities import Card, choice, after, whenever
+from hearthstone.enums import GameTag, Race
+from ..entities import Minion, choice, after, whenever
 
 
-class DreadAdmiralEliza(Card):
-    @whenever(Card.attack)
+class DreadAdmiralEliza(Minion):
+    @whenever(Minion.attack)
     def effect(self, this, defender):
         if self.controller is this.controller and this in Race.Pirate:
             for minion in self.friendly_minions:
                 minion.gain(2 * self.tip, self.tip)
 
 
-class FoeReaper4000(Card):
-    @whenever(Card.attack)
+class FoeReaper4000(Minion):
+    @whenever(Minion.attack)
     def effect(self, this, defender):
         """Also damages the minions next to whomever this attacks."""
         if self is this:
@@ -20,41 +19,41 @@ class FoeReaper4000(Card):
                 self.deal_damage(self.atk, minion)
 
 
-class GentleDjinni(Card):
+class GentleDjinni(Minion):
     def deathrattle(self):
         """Summon another random Elemental and add a copy of it to your hand."""
 
 
-class Ghastcoiler(Card):
+class Ghastcoiler(Minion):
     def deathrattle(self):
         for _ in range(2 * self.tip):
             self.summon(
-                Card.random(mechanics__contains="DEATHRATTLE", cardtype="MINION")
+                Minion.random(mechanics__contains="DEATHRATTLE", cardtype="MINION")
             )
 
 
-class GoldrinnTheGreatWolf(Card):
+class GoldrinnTheGreatWolf(Minion):
     def deathrattle(self):
         for minion in self.friendly_minions | Race.Beast:
             minion.gain(5 * self.tip, 5 * self.tip)
 
 
-class ImpMama(Card):
-    @whenever(Card.deal_damage)
+class ImpMama(Minion):
+    @whenever(Minion.deal_damage)
     def effect(self, this, amount, card):
         if self is card:
-            random_demon = Card.random(race="DEMON")
+            random_demon = self.create(Minion.random(race=Race.DEMON))
             self.summon(random_demon)
-            random_demon.taunt = True
+            random_demon.tags[GameTag.TAUNT] = True
 
 
-class NadinaTheRed(Card):
+class NadinaTheRed(Minion):
     def deathrattle(self):
         for minion in self.friendly_minions | Race.Dragon:
             minion.divine_shield = True
 
 
-class TheTideRazor(Card):
+class TheTideRazor(Minion):
     def deathrattle(self):
         for _ in range(3 * self.tip):
-            self.summon(Card.random(race="PIRATE"))
+            self.summon(Minion.random(race="PIRATE"))

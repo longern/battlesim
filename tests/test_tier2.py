@@ -1,5 +1,5 @@
-from battlesim.battle import battle, parse_battlefield
-from battlesim.keywords import *
+from battlesim.simulator.battle import battle, parse_battlefield
+from hearthstone.enums import GameTag
 
 
 def test_glyph_guardian():
@@ -8,7 +8,12 @@ def test_glyph_guardian():
 
 def test_harvest_golem():
     assert battle(parse_battlefield((["LOOT_013"], [(3, 3)]))) == 0
-    assert battle(parse_battlefield((["LOOT_013", (6, 1), (1, 1, Taunt)], [(6, 6)]))) == 0
+    assert (
+        battle(
+            parse_battlefield((["LOOT_013", (6, 1), (1, 1, GameTag.TAUNT)], [(6, 6)]))
+        )
+        == 0
+    )
 
 
 def test_kaboom_bot():
