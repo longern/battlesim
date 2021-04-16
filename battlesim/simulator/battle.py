@@ -10,20 +10,24 @@ from .entities import Card, Game, Player
 
 
 def check_death(game: Game):
-    for entity in list(game.entities):
-        if GameTag.HEALTH in entity.tags and entity.tags[
-            GameTag.HEALTH
-        ] <= entity.tags.get(GameTag.DAMAGE, 0):
-            try:
-                entity.index = entity.controller.minions.index(entity)
-                entity.tags[GameTag.ZONE] = Zone.GRAVEYARD
-                entity.die()
-            except ValueError:
-                pass
+    while game.to_check_death:
+        to_check_death = game.to_check_death.copy()
+        game.to_check_death.clear()
+        for entity in to_check_death:
+            if GameTag.HEALTH in entity.tags and entity.tags[
+                GameTag.HEALTH
+            ] <= entity.tags.get(GameTag.DAMAGE, 0):
+                try:
+                    entity.index = entity.controller.minions.index(entity)
+                    entity.tags[GameTag.ZONE] = Zone.GRAVEYARD
+                    entity.die()
+                except ValueError:
+                    pass
 
 
 def extend_entities(game: Game):
     game.dispatcher = defaultdict(list)
+    game.to_check_death = []
     for entity in game.entities:
         class_name = "".join(map(str.capitalize, entity.type.name.split("_")))
         entity.__class__ = getattr(entities, class_name, entities.Card)
@@ -40,7 +44,7 @@ def battle(game: Game):
         next(current_player_iter)
 
     for entity in game.entities:
-        if GameTag.START_OF_COMBAT in entity.tags:
+        if callable(getattr(entity, "start_of_combat", None)):
             entity.start_of_combat()
 
     game.dispatcher["after_attack"].append((game, lambda *_: check_death(game)))

@@ -1,5 +1,6 @@
 import logging
 from collections import Counter
+from copy import deepcopy
 
 from hearthstone import enums
 from hearthstone.cardxml import load
@@ -15,7 +16,7 @@ logging.getLogger().setLevel(logging.ERROR)
 def card_repr(card) -> str:
     return "%s%d/%d" % (
         db[card.card_id].name,
-        card.tags.get(enums.GameTag.ATK),
+        card.tags.get(enums.GameTag.ATK, 0),
         card.tags.get(enums.GameTag.HEALTH) - card.tags.get(enums.GameTag.DAMAGE, 0),
     )
 
@@ -44,8 +45,7 @@ def combat_callback(parser: BattlegroundParser):
 
     result_counter = Counter({1: 0, 0: 0, -1: 0})
     for _ in range(1000):
-        game = parser.export_game()
-        result_counter[battle(game)] += 1
+        result_counter[battle(deepcopy(game))] += 1
 
     print(result_counter)
 

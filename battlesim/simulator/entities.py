@@ -46,23 +46,23 @@ class Game(BaseGame):
     def __init__(self, id=1):
         super(Game, self).__init__(id)
         self.dispatcher = defaultdict(list)
+        self.to_check_death = []
 
     def filter(self, **kwargs):
+        queries = {getattr(GameTag, k.upper()): v for k, v in kwargs.items()}
         for entity in self.entities:
-            if all(
-                entity.tags.get(getattr(GameTag, k.upper())) == v
-                for k, v in kwargs.items()
-            ):
+            if all(entity.tags.get(k) == v for k, v in queries.items()):
                 yield entity
 
 
 class Player(BasePlayer):
     @property
     def minions(self):
-        return list(
+        return sorted(
             self.game.filter(
-                zone=Zone.PLAY, cardtype=CardType.MINION, controller=self.player_id
-            )
+                controller=self.player_id, zone=Zone.PLAY, cardtype=CardType.MINION
+            ),
+            key=lambda minion: minion.tags.get(GameTag.ZONE_POSITION, 10),
         )
 
     @property
@@ -104,7 +104,7 @@ class Card(BaseCard):
     def __repr__(self):
         return f"{self.name}"
 
-    atk = tag_getter(GameTag.ATK)
+    atk = tag_getter(GameTag.ATK, 0)
     attacking = tag_getter(GameTag.ATTACKING, False)
     defending = tag_getter(GameTag.DEFENDING, False)
     divine_shield = tag_getter(GameTag.DIVINE_SHIELD, False)
@@ -175,6 +175,9 @@ class Card(BaseCard):
 
         if isinstance(self, Card) and self.poisonous:
             card.to_be_destroyed = True
+
+        if card.health <= 0 or card.to_be_destroyed:
+            self.game.to_check_death.append(card)
 
     def gain(self, atk, health, permanently=False):
         self.tags[GameTag.ATK] += atk
@@ -279,13 +282,7 @@ class Card(BaseCard):
 
     @property
     def friendly_minions(self) -> List["Card"]:
-        return list(
-            self.game.filter(
-                controller=self.tags[GameTag.CONTROLLER],
-                zone=Zone.PLAY,
-                cardtype=CardType.MINION,
-            )
-        )
+        return self.controller.minions
 
     @property
     def health(self):
