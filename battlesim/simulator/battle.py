@@ -43,11 +43,11 @@ def battle(game: Game):
     if enemy_minion_num > friendly_minion_num + random.uniform(-0.1, 0.1):
         next(current_player_iter)
 
+    game.dispatcher["after_attack"].append((game, lambda *_: check_death(game)))
+
     for entity in game.entities:
         if callable(getattr(entity, "start_of_combat", None)):
             entity.start_of_combat()
-
-    game.dispatcher["after_attack"].append((game, lambda *_: check_death(game)))
 
     check_death(game)
 

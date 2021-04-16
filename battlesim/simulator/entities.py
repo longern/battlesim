@@ -54,6 +54,9 @@ class Game(BaseGame):
             if all(entity.tags.get(k) == v for k, v in queries.items()):
                 yield entity
 
+    def __repr__(self):
+        return repr(self.players[0].minions) + "\n" + repr(self.players[1].minions)
+
 
 class Player(BasePlayer):
     @property

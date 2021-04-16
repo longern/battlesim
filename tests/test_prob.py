@@ -4,12 +4,12 @@ from battlesim.simulator.battle import battle, parse_battlefield
 
 
 def calculate_winrate(friendly_minions, enemy_minions):
-    result_counter = Counter()
-    for _ in range(100):
+    result_counter = Counter({-1: 0, 0: 0, 1: 0})
+    for _ in range(1000):
         result = battle(parse_battlefield((friendly_minions, enemy_minions)))
         result_counter[result] += 1
 
-    return {key: value / 100 for key, value in result_counter.items()}
+    return {key: value / 1000 for key, value in result_counter.items()}
 
 
 def test_prob_1():
@@ -17,4 +17,12 @@ def test_prob_1():
         ["BGS_039", "BGS_039", (2, 2), (2, 2, "BGS_019"), "BGS_019", (2, 1), (1, 1)],
         ["OG_256", "BGS_045", "BGS_119", (4, 4), "BOT_606", (1, 1)],
     )
-    assert winrate[-1] > 0.7
+    assert 0.7 < winrate[-1] < 0.9
+
+
+def test_prob_2():
+    winrate = calculate_winrate(
+        ["BGS_061", "BGS_055", "BGS_060"],
+        ["BGS_106", "BGS_201", "BGS_106"],
+    )
+    assert abs(winrate[-1] - 0.8) < 0.1
