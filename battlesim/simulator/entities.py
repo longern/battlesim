@@ -1,4 +1,5 @@
 import logging
+import operator
 import re
 from collections import defaultdict
 from functools import lru_cache, wraps
@@ -243,15 +244,24 @@ class Card(BaseCard):
         game.register_entity(card)
         return card
 
-    @classmethod
-    def random(cls, **kwargs):
+    def random(**kwargs):
         db, _ = load()
+        conditions = [
+            (
+                re.sub("__.*", "", key),
+                getattr(
+                    operator, re.search("(__[a-z]*)?$", key).group()[2:], operator.eq
+                ),
+                value,
+            )
+            for key, value in kwargs.items()
+        ]
 
         candidates = [
             card.id
             for card in db.values()
             if GameTag.TECH_LEVEL in card.tags
-            and all(getattr(card, key) == value for key, value in kwargs.items())
+            and all(op(getattr(card, key), value) for key, op, value in conditions)
         ]
 
         if not candidates:
