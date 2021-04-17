@@ -3,6 +3,7 @@ import random
 from collections import defaultdict
 from itertools import cycle
 
+from hearthstone.cardxml import load
 from hearthstone.enums import CardType, GameTag, Zone
 
 from . import entities
@@ -28,9 +29,13 @@ def check_death(game: Game):
 def extend_entities(game: Game):
     game.dispatcher = defaultdict(list)
     game.to_check_death = []
+    db, _ = load()
     for entity in game.entities:
         class_name = "".join(map(str.capitalize, entity.type.name.split("_")))
-        entity.__class__ = getattr(entities, class_name, entities.Card)
+        cls = getattr(entities, class_name, entities.Card)
+        if hasattr(cls, "load_effect") and getattr(entity, "card_id", None):
+            cls = cls.load_effect(db[entity.card_id].name)
+        entity.__class__ = cls
 
 
 def battle(game: Game):

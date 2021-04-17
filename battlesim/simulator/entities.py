@@ -217,6 +217,18 @@ class Card(BaseCard):
             getattr(self, ability)()
 
     @classmethod
+    def load_effect(cls, card_name: str):
+        # Load effect
+        from . import effects
+
+        words = re.sub(r"[^ 0-9A-Za-z]", "", card_name).split(" ")
+        class_name = "".join(map(str.capitalize, words))
+        if hasattr(effects, class_name):
+            cls = getattr(effects, class_name)
+
+        return cls
+
+    @classmethod
     def fromid(cls, game: Game, card_id: str, **kwargs):
         try:
             db, _ = load()
@@ -225,13 +237,7 @@ class Card(BaseCard):
             logging.error("Card %d not found.", card_id)
             return None
 
-        # Load effect
-        from . import effects
-
-        words = re.sub(r"[^ 0-9A-Za-z]", "", card_data.name).split(" ")
-        class_name = "".join(map(str.capitalize, words))
-        if hasattr(effects, class_name):
-            cls = getattr(effects, class_name)
+        cls = cls.load_effect(card_data.name)
 
         card: Card = cls(max(game._entities.keys(), default=0) + 1, card_id, **kwargs)
         game.register_entity(card)
