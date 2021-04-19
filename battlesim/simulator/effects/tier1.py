@@ -1,5 +1,6 @@
 from hearthstone.enums import GameTag, Race
 
+from ..battle import check_death
 from ..entities import Minion, after, choice, whenever
 
 
@@ -15,6 +16,7 @@ class RedWhelp(Minion):
         amount = len(list(self.friendly_minions | Race.DRAGON))
         for _ in range(self.tip):
             self.deal_damage(amount, choice(self.enemy_minions))
+            check_death(self.game)
 
 
 class Scallywag(Minion):

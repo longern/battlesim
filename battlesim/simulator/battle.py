@@ -119,7 +119,7 @@ def parse_battlefield(player_minions_stats) -> Game:
             game.register_entity(minion)
             minion.tags[GameTag.CONTROLLER] = player.player_id
             minion.tags[GameTag.ZONE] = Zone.PLAY
-            minion.tags[GameTag.ZONE_POSITION] = i
+            minion.tags[GameTag.ZONE_POSITION] = i + 1
             for entity in (minion, *minion.enchantments):
                 if hasattr(entity, "effect"):
                     game.dispatcher[minion.effect.condition].append(
