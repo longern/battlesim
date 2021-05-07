@@ -2,13 +2,10 @@ import logging
 import operator
 import re
 from collections import defaultdict
-from functools import lru_cache, wraps
+from functools import lru_cache, wraps, cached_property
 from typing import Any, Dict, List
 
 from hearthstone.cardxml import load
-from hearthstone.entities import Card as BaseCard
-from hearthstone.entities import Game as BaseGame
-from hearthstone.entities import Player as BasePlayer
 from hearthstone.enums import CardType, GameTag, Zone
 
 from .event import after, register_action, whenever
@@ -31,42 +28,42 @@ def pick_attacked_target(minions):
     return choice(minions)
 
 
-def tag_getter(tag: GameTag, default=None):
-    @property
-    def get_tag(self):
-        return self.tags.get(tag, default)
-
-    @get_tag.setter
-    def get_tag(self, value):
-        self.tag_change(tag, value)
-
-    return get_tag
+class Entity:
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
-class Game(BaseGame):
-    def __init__(self, id=1):
-        super(Game, self).__init__(id)
+class Game(Entity):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.entities = {}
         self.dispatcher = defaultdict(list)
         self.to_check_death = []
-
-    def filter(self, **kwargs):
-        queries = {getattr(GameTag, k.upper()): v for k, v in kwargs.items()}
-        for entity in self.entities:
-            if all(entity.tags.get(k) == v for k, v in queries.items()):
-                yield entity
 
     def __repr__(self):
         return repr(self.players[0].minions) + "\n" + repr(self.players[1].minions)
 
+    @cached_property
+    def players(self) -> List["Player"]:
+        return [
+            entity
+            for entity in self.entities.values()
+            if getattr(entity, "cardtype", None) == CardType.PLAYER
+        ]
 
-class Player(BasePlayer):
-    @property
+
+class Player(Entity):
+    @cached_property
     def minions(self):
         return sorted(
-            self.game.filter(
-                controller=self.player_id, zone=Zone.PLAY, cardtype=CardType.MINION
+            filter(
+                lambda entity: getattr(entity, "cardtype", None) == CardType.MINION
+                and entity.zone == Zone.PLAY
+                and entity.controller == self.player_id,
+                self.game.entities.values(),
             ),
-            key=lambda minion: minion.tags.get(GameTag.ZONE_POSITION, 10),
+            key=lambda minion: minion.zone_position,
         )
 
     @property
@@ -90,35 +87,9 @@ def infer_child_card_id(parent_id: str) -> str:
     return candidates[0]
 
 
-class Card(BaseCard):
-    def __init__(self, id, card_id, **kwargs):
-        try:
-            super(Card, self).__init__(id, card_id)
-
-            self.tags = self.base_tags.copy()
-        except KeyError:
-            self.tags[GameTag.CARDTYPE] = CardType.MINION
-
-        for key, value in kwargs.items():
-            self.tags[getattr(GameTag, key.upper())] = value
-
-        if kwargs.get("start_with_1_health", False):
-            self.tags[GameTag.DAMAGE] = self.tags[GameTag.HEALTH] - 1
-
+class Card(Entity):
     def __repr__(self):
         return f"{self.name}"
-
-    atk = tag_getter(GameTag.ATK, 0)
-    attacking = tag_getter(GameTag.ATTACKING, False)
-    defending = tag_getter(GameTag.DEFENDING, False)
-    divine_shield = tag_getter(GameTag.DIVINE_SHIELD, False)
-    num_attacks_this_turn = tag_getter(GameTag.NUM_ATTACKS_THIS_TURN, 0)
-    poisonous = tag_getter(GameTag.POISONOUS, False)
-    premium = tag_getter(GameTag.PREMIUM, False)
-    reborn = tag_getter(GameTag.REBORN, False)
-    taunt = tag_getter(GameTag.TAUNT, False)
-    to_be_destroyed = tag_getter(GameTag.TO_BE_DESTROYED, False)
-    windfury = tag_getter(GameTag.WINDFURY, False)
 
     @property
     def name(self):
@@ -127,9 +98,6 @@ class Card(BaseCard):
             return db[self.card_id].name
         except KeyError:
             return self.card_id
-
-    def create(self, card_id, **kwargs):
-        return Minion.fromid(self.game, card_id, **kwargs)
 
     def propose_defender(func):
         @wraps(func)
@@ -302,10 +270,6 @@ class Card(BaseCard):
     @property
     def friendly_minions(self) -> List["Card"]:
         return self.controller.minions
-
-    @property
-    def health(self):
-        return self.tags[GameTag.HEALTH] - self.tags.get(GameTag.DAMAGE, 0)
 
     @property
     def other(self):

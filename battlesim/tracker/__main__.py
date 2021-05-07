@@ -16,31 +16,20 @@ logging.getLogger().setLevel(logging.ERROR)
 def card_repr(card) -> str:
     return "%s%d/%d" % (
         db[card.card_id].name,
-        card.tags.get(enums.GameTag.ATK, 0),
-        card.tags.get(enums.GameTag.HEALTH) - card.tags.get(enums.GameTag.DAMAGE, 0),
+        getattr(card, "atk", 0),
+        card.health - getattr(card, "damage", 0),
     )
 
 
 def combat_callback(parser: BattlegroundParser):
     game = parser.export_game()
-    turn = game.tags[enums.GameTag.TURN] // 2
+    turn = game.turn // 2
     print(f"Combat of turn {turn} starts.")
 
-    in_play_minions_filter = (
-        lambda entity: entity.zone is enums.Zone.PLAY
-        and entity.type is enums.CardType.MINION
-    )
-
-    friendly_minions = sorted(
-        filter(in_play_minions_filter, game.players[0].entities),
-        key=lambda card: card.tags.get(enums.GameTag.ZONE_POSITION),
-    )
+    friendly_minions = game.players[0].minions
     print(" ".join(map(card_repr, friendly_minions)))
 
-    enemy_minions = sorted(
-        filter(in_play_minions_filter, game.players[1].entities),
-        key=lambda card: card.tags.get(enums.GameTag.ZONE_POSITION),
-    )
+    enemy_minions = game.players[1].minions
     print(" ".join(map(card_repr, enemy_minions)))
 
     result_counter = Counter({1: 0, 0: 0, -1: 0})
