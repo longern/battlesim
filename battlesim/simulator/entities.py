@@ -31,7 +31,8 @@ def pick_attacked_target(minions):
 class Entity:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
-            setattr(self, key, value)
+            if not callable(getattr(self, key, None)) or not value:
+                setattr(self, key, value)
 
 
 class Game(Entity):
@@ -39,7 +40,8 @@ class Game(Entity):
         super().__init__(**kwargs)
         self.entities = {}
         self.dispatcher = defaultdict(list)
-        self.to_check_death = []
+        self.to_check_death: List[Card] = []
+        self.max_entity_id = 1
 
     def __repr__(self):
         return repr(self.players[0].minions) + "\n" + repr(self.players[1].minions)
@@ -51,6 +53,14 @@ class Game(Entity):
             for entity in self.entities.values()
             if getattr(entity, "cardtype", None) == CardType.PLAYER
         ]
+
+    def register_entity(self, entity: Entity):
+        entity.game = self
+
+        if not hasattr(entity, "entity_id"):
+            entity.entity_id = self.max_entity_id + 1
+        self.entities[entity.entity_id] = entity
+        self.max_entity_id = max(self.max_entity_id, entity.entity_id)
 
 
 class Player(Entity):
@@ -66,7 +76,7 @@ class Player(Entity):
             key=lambda minion: minion.zone_position,
         )
 
-    @property
+    @cached_property
     def opponent(self) -> "Player":
         for player in self.game.players:
             if player is not self:
@@ -88,6 +98,15 @@ def infer_child_card_id(parent_id: str) -> str:
 
 
 class Card(Entity):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if getattr(self, "cardtype", None) == CardType.MINION:
+            self.damage = 0
+            self.divine_shield = getattr(self, "divine_shield", False)
+            self.num_attacks_this_turn = 0
+            self.taunt = getattr(self, "taunt", False)
+            self.to_be_destroyed = False
+
     def __repr__(self):
         return f"{self.name}"
 
@@ -135,43 +154,45 @@ class Card(Entity):
     @predamage
     @register_action
     def deal_damage(self, amount: int, card: "Card"):
-        card.tags.setdefault(GameTag.DAMAGE, 0)
-        card.tags[GameTag.DAMAGE] += amount
+        card.damage += amount
 
         if (
-            card.health < 0
+            card.health < card.damage
             and hasattr(self, "overkill")
-            and self.controller is self.game.current_player
+            and getattr(self, "attacking", False)
         ):
             self.overkill()
 
-        if isinstance(self, Card) and self.poisonous:
+        if isinstance(self, Card) and getattr(self, "poisonous", False):
             card.to_be_destroyed = True
 
-        if card.health <= 0 or card.to_be_destroyed:
+        if card.health <= card.damage or card.to_be_destroyed:
             self.game.to_check_death.append(card)
 
     def gain(self, atk, health, permanently=False):
-        self.tags[GameTag.ATK] += atk
-        self.tags[GameTag.HEALTH] += health
+        self.atk += atk
+        self.health += health
 
     @register_action
     def die(self):
         self.trigger("Deathrattle")
-        if self.reborn:
-            self.summon(self.create(self.card_id, start_with_1_health=1, reborn=False))
+        if getattr(self, "reborn", False):
+            new_card = Card.fromid(
+                self.game, self.card_id, start_with_1_health=1, reborn=False
+            )
+            self.summon(new_card)
 
     @register_action
     def lose_divine_shield(self):
-        self.tags[GameTag.DIVINE_SHIELD] = False
+        self.divine_shield = False
 
     @register_action
     def summon(self, card: "Card"):
         if not card or len(self.friendly_minions) >= 7:
             return
 
-        card.tags[GameTag.CONTROLLER] = self.tags[GameTag.CONTROLLER]
-        card.tags[GameTag.ZONE] = Zone.PLAY
+        card.controller = self.controller
+        card.zone = Zone.PLAY
         self.friendly_minions.insert(
             getattr(self, "index", len(self.friendly_minions)), card
         )
@@ -185,20 +206,19 @@ class Card(Entity):
         if callable(getattr(self, ability, None)):
             getattr(self, ability)()
 
-    @classmethod
-    def load_effect(cls, card_name: str):
+    @staticmethod
+    def load_effect(card_name: str):
         # Load effect
         from . import effects
 
         words = re.sub(r"[^ 0-9A-Za-z]", "", card_name).split(" ")
         class_name = "".join(map(str.capitalize, words))
-        if hasattr(effects, class_name):
-            cls = getattr(effects, class_name)
+        cls = getattr(effects, class_name, Card)
 
         return cls
 
-    @classmethod
-    def fromid(cls, game: Game, card_id: str, **kwargs):
+    @staticmethod
+    def fromid(game: Game, card_id: str, **kwargs):
         try:
             db, _ = load()
             card_data = db[card_id]
@@ -206,11 +226,19 @@ class Card(Entity):
             logging.error("Card %d not found.", card_id)
             return None
 
-        cls = cls.load_effect(card_data.name)
+        for tag, value in card_data.tags.items():
+            if isinstance(tag, GameTag):
+                kwargs.setdefault(tag.name.lower(), value)
+        kwargs.setdefault("zone", Zone.SETASIDE)
 
-        card: Card = cls(max(game._entities.keys(), default=0) + 1, card_id, **kwargs)
+        cls = Card.load_effect(card_data.name)
+
+        card: Card = cls(card_id=card_id, **kwargs)
         game.register_entity(card)
         return card
+
+    def create(self, card_id: str, **kwargs):
+        return Card.fromid(self.game, card_id, **kwargs)
 
     def random(**kwargs):
         db, _ = load()
@@ -246,10 +274,18 @@ class Card(Entity):
     def alive(self) -> bool:
         return self.health > 0 and not self.to_be_destroyed
 
+    @cached_property
+    def controller_entity(self) -> Player:
+        for player in self.game.players:
+            if player.player_id == self.controller:
+                return player
+        return None
+
     def child_card(self) -> str:
-        if not self.premium and hasattr(self.__class__, "normal_child"):
+        premium = getattr(self, "premium", False)
+        if not premium and hasattr(self.__class__, "normal_child"):
             child_card_id = self.__class__.normal_child
-        elif self.premium and hasattr(self.__class__, "premium_child"):
+        elif premium and hasattr(self.__class__, "premium_child"):
             child_card_id = self.__class__.premium_child
         else:
             child_card_id = infer_child_card_id(self.card_id)
@@ -260,16 +296,16 @@ class Card(Entity):
         return [
             entity
             for entity in self.game.entities
-            if entity.tags.get(GameTag.ATTACHED) == self.id
+            if getattr(entity, "attached", None) == self.entity_id
         ]
 
     @property
     def enemy_minions(self) -> List["Card"]:
-        return self.controller.opponent.minions
+        return self.controller_entity.opponent.minions
 
     @property
     def friendly_minions(self) -> List["Card"]:
-        return self.controller.minions
+        return self.controller_entity.minions
 
     @property
     def other(self):
@@ -277,7 +313,7 @@ class Card(Entity):
 
     @property
     def tip(self):
-        return 2 if self.premium else 1
+        return 2 if getattr(self, "premium", False) else 1
 
 
 class Hero(Card):
@@ -298,5 +334,5 @@ class Enchantment(Card):
         return f"{self.name}"
 
     @property
-    def attached(self):
-        return self.game._entities[self.tags[GameTag.ATTACHED]]
+    def attached_entity(self):
+        return self.game.entities[self.attached]

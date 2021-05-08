@@ -45,7 +45,7 @@ class ImpMama(Minion):
         if self is card:
             random_demon = self.create(Minion.random(race=Race.DEMON))
             self.summon(random_demon)
-            random_demon.tags[GameTag.TAUNT] = True
+            random_demon.taunt = True
 
 
 class NadinaTheRed(Minion):

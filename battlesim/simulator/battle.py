@@ -14,34 +14,18 @@ def check_death(game: Game):
     while game.to_check_death:
         to_check_death = game.to_check_death.copy()
         game.to_check_death.clear()
-        for entity in to_check_death:
-            if GameTag.HEALTH in entity.tags and entity.tags[
-                GameTag.HEALTH
-            ] <= entity.tags.get(GameTag.DAMAGE, 0):
+        for card in to_check_death:
+            if card.health <= card.damage:
                 try:
-                    entity.index = entity.controller.minions.index(entity)
-                    entity.tags[GameTag.ZONE] = Zone.GRAVEYARD
-                    entity.die()
+                    card.index = card.controller_entity.minions.index(card)
+                    card.zone = Zone.GRAVEYARD
+                    del card.controller_entity.minions
+                    card.die()
                 except ValueError:
                     pass
 
 
-def extend_entities(game: Game):
-    game.dispatcher = defaultdict(list)
-    game.to_check_death = []
-    db, _ = load()
-    for entity in game.entities:
-        class_name = "".join(map(str.capitalize, entity.type.name.split("_")))
-        cls = getattr(entities, class_name, entities.Card)
-        if hasattr(cls, "load_effect") and getattr(entity, "card_id", None):
-            cls = cls.load_effect(db[entity.card_id].name)
-        entity.__class__ = cls
-
-
 def battle(game: Game):
-    if not isinstance(game, Game):
-        extend_entities(game)
-
     friendly_minion_num = len(game.players[0].minions)
     enemy_minion_num = len(game.players[1].minions)
     current_player_iter = cycle(game.players)
@@ -57,9 +41,7 @@ def battle(game: Game):
     check_death(game)
 
     attackable = lambda minion: minion.num_attacks_this_turn < 1 and minion.atk > 0
-    while any(filter(attackable, game.filter(cardtype=CardType.MINION))) and all(
-        player.minions for player in game.players
-    ):
+    while all(player.minions for player in game.players):
         current_player = next(current_player_iter)
         try:
             active_minion: entities.Minion = next(
@@ -67,28 +49,28 @@ def battle(game: Game):
             )
         except StopIteration:
             for minion in current_player.minions:
-                minion.tags[GameTag.NUM_ATTACKS_THIS_TURN] = 0
+                minion.num_attacks_this_turn = 0
             active_minion = next(filter(attackable, current_player.minions), None)
             if active_minion is None:
                 continue
         active_minion.attack()
 
-        if active_minion.windfury and active_minion in current_player.minions:
+        if (
+            getattr(active_minion, "windfury", False)
+            and active_minion in current_player.minions
+        ):
             active_minion.attack()
 
-        active_minion.tags.setdefault(GameTag.NUM_ATTACKS_THIS_TURN, 0)
-        active_minion.tags[GameTag.NUM_ATTACKS_THIS_TURN] += 1
+        active_minion.num_attacks_this_turn += 1
 
     return bool(game.players[0].minions) - bool(game.players[1].minions)
 
 
 def parse_battlefield(player_minions_stats) -> Game:
-    game = Game(1)
-    game.register_entity(Player(2, 1, 1, 1))
-    game.register_entity(Player(3, 9, 0, 0))
-
-    for player in game.players:
-        player.game = game
+    game = Game(entity_id=1)
+    game.entities[1] = game
+    game.register_entity(Player(player_id=1, cardtype=CardType.PLAYER))
+    game.register_entity(Player(player_id=9, cardtype=CardType.PLAYER))
 
     for player, minions_stats in zip(game.players, player_minions_stats):
         for i, minion_stat in enumerate(minions_stats):
@@ -103,23 +85,20 @@ def parse_battlefield(player_minions_stats) -> Game:
                     )
                 else:
                     minion = entities.Minion(
-                        id(minion_stat),
-                        str(hash(minion_stat)),
-                        atk=attack,
-                        health=health,
+                        atk=attack, health=health, cardtype=CardType.MINION
                     )
                 for arg in args:
                     if isinstance(arg, str):
                         enchantment = entities.Enchantment.fromid(game, arg)
-                        enchantment.tags[GameTag.ATTACHED] = minion.id
+                        enchantment.attached = minion.entity_id
                         if callable(getattr(enchantment, "on_attached", None)):
                             enchantment.on_attached()
                     elif isinstance(arg, GameTag):
-                        minion.tag_change(arg, True)
+                        setattr(minion, arg.name.lower(), True)
             game.register_entity(minion)
-            minion.tags[GameTag.CONTROLLER] = player.player_id
-            minion.tags[GameTag.ZONE] = Zone.PLAY
-            minion.tags[GameTag.ZONE_POSITION] = i + 1
+            minion.controller = player.player_id
+            minion.zone = Zone.PLAY
+            minion.zone_position = i + 1
             for entity in (minion, *minion.enchantments):
                 if hasattr(entity, "effect"):
                     game.dispatcher[minion.effect.condition].append(

@@ -46,4 +46,4 @@ class SelflessHero(Minion):
             minion for minion in self.friendly_minions if not minion.divine_shield
         ]
         if candidates:
-            choice(candidates).tags[GameTag.DIVINE_SHIELD] = True
+            choice(candidates).divine_shield = True

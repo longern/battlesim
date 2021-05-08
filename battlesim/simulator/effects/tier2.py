@@ -7,7 +7,7 @@ class GlyphGuardian(Minion):
     @whenever(Minion.attack)
     def effect(self, this, defender):
         if self is this:
-            self.tags[GameTag.ATK] *= 1 + self.tip
+            self.atk *= 1 + self.tip
 
 
 class HarvestGolem(Minion):
