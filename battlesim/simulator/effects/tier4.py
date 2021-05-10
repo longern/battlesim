@@ -12,7 +12,7 @@ def alive(minions):
 class Bigfernal(Minion):
     @after(Minion.summon)
     def effect(self, this, card):
-        if self.controller is card.controller and card in Race.Demon:
+        if self.controller is card.controller and card in Race.DEMON:
             self.gain(self.tip, self.tip, permanently=True)
 
 

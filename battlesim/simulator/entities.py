@@ -116,7 +116,7 @@ class Card(Entity):
         try:
             return db[self.card_id].name
         except KeyError:
-            return self.card_id
+            return getattr(self, "card_id", "?")
 
     def propose_defender(func):
         @wraps(func)
@@ -193,9 +193,11 @@ class Card(Entity):
 
         card.controller = self.controller
         card.zone = Zone.PLAY
-        self.friendly_minions.insert(
-            getattr(self, "index", len(self.friendly_minions)), card
-        )
+        card.zone_position = getattr(self, "index", len(self.friendly_minions)) + 1
+        self.friendly_minions.insert(card.zone_position - 1, card)
+
+        for pos, minion in enumerate(self.friendly_minions, 1):
+            minion.zone_position = pos
 
         if hasattr(card, "effect"):
             self.game.dispatcher[card.effect.condition].append((card, card.effect))
@@ -207,13 +209,15 @@ class Card(Entity):
             getattr(self, ability)()
 
     @staticmethod
-    def load_effect(card_name: str):
+    def load_effect(card_name: str, cardtype: CardType):
         # Load effect
         from . import effects
 
+        default_cls = Minion if cardtype == CardType.MINION else Card
+
         words = re.sub(r"[^ 0-9A-Za-z]", "", card_name).split(" ")
         class_name = "".join(map(str.capitalize, words))
-        cls = getattr(effects, class_name, Card)
+        cls = getattr(effects, class_name, default_cls)
 
         return cls
 
@@ -231,7 +235,7 @@ class Card(Entity):
                 kwargs.setdefault(tag.name.lower(), value)
         kwargs.setdefault("zone", Zone.SETASIDE)
 
-        cls = Card.load_effect(card_data.name)
+        cls = Card.load_effect(card_data.name, card_data.tags[GameTag.CARDTYPE])
 
         card: Card = cls(card_id=card_id, **kwargs)
         game.register_entity(card)
@@ -267,12 +271,12 @@ class Card(Entity):
 
     @property
     def adjacent_minions(self) -> List["Card"]:
-        index = self.controller.minions.index(self)
-        return self.controller.minions[abs(index - 1) : index + 2 : 2]
+        index = self.zone_position - 1
+        return self.controller_entity.minions[abs(index - 1) : index + 2 : 2]
 
     @property
     def alive(self) -> bool:
-        return self.health > 0 and not self.to_be_destroyed
+        return self.health > self.damage and not self.to_be_destroyed
 
     @cached_property
     def controller_entity(self) -> Player:

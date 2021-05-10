@@ -20,6 +20,8 @@ def check_death(game: Game):
                     card.index = card.controller_entity.minions.index(card)
                     card.zone = Zone.GRAVEYARD
                     del card.controller_entity.minions
+                    for pos, minion in enumerate(card.friendly_minions, 1):
+                        minion.zone_position = pos
                     card.die()
                 except ValueError:
                     pass
@@ -34,7 +36,7 @@ def battle(game: Game):
 
     game.dispatcher["after_attack"].append((game, lambda *_: check_death(game)))
 
-    for entity in game.entities:
+    for entity in game.entities.values():
         if callable(getattr(entity, "start_of_combat", None)):
             entity.start_of_combat()
 
