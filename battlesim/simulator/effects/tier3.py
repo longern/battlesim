@@ -46,7 +46,7 @@ class Khadgar(Minion):
             card.copied_by_khadgar = True
             for _ in range(self.tip):
                 copy = self.create(card.card_id)
-                copy.tags = card.tags.copy()
+                copy.__dict__ = card.__dict__.copy()
                 copy.khadgar = True
                 card.index = card.friendly_minions.index(card) + 1
                 card.summon(copy)

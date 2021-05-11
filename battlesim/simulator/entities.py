@@ -118,7 +118,7 @@ class Card(Entity):
         db, _ = load(locale="zhCN")
         try:
             return db[self.card_id].name
-        except KeyError:
+        except (KeyError, AttributeError):
             return getattr(self, "card_id", "?")
 
     def propose_defender(func):
