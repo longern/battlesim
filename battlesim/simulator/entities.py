@@ -107,6 +107,9 @@ class Card(Entity):
             self.taunt = getattr(self, "taunt", False)
             self.to_be_destroyed = False
 
+            if kwargs.get("start_with_1_health", False):
+                self.damage = self.health - 1
+
     def __repr__(self):
         return f"{self.name}"
 
@@ -202,11 +205,21 @@ class Card(Entity):
         if hasattr(card, "effect"):
             self.game.dispatcher[card.effect.condition].append((card, card.effect))
 
+    def check_mechanics(func):
+        @wraps(func)
+        def wrapper(self, ability: str):
+            ability = ability.lower()
+            if not callable(getattr(self, ability, None)):
+                return
+
+            return func(self, ability)
+
+        return wrapper
+
+    @check_mechanics
     @register_action
     def trigger(self, ability: str):
-        ability = ability.lower()
-        if callable(getattr(self, ability, None)):
-            getattr(self, ability)()
+        getattr(self, ability)()
 
     @staticmethod
     def load_effect(card_name: str, cardtype: CardType):
@@ -330,7 +343,7 @@ class HeroPower(Card):
 
 class Minion(Card):
     def __repr__(self):
-        return f"{self.name}{self.atk}/{self.health}"
+        return f"{self.name}{self.atk}/{self.health - self.damage}"
 
 
 class Enchantment(Card):
