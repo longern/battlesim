@@ -42,7 +42,7 @@ def combat_callback(parser: BattlegroundParser):
 
 
 def main():
-    parser = BattlegroundParser(combat_callback)
+    parser = BattlegroundParser({"combat": combat_callback})
     parser.read(follow(get_log_path()))
 
 

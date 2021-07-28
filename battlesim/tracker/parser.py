@@ -9,16 +9,28 @@ REROLL_BUTTON_REMOVED = (
 )
 
 
+def do_nothing(self):
+    pass
+
+
 class BattlegroundParser(LogParser):
-    def __init__(self, combat_callback):
+    def __init__(self, callbacks: dict):
         super(BattlegroundParser, self).__init__()
         self.combat = False
-        self.combat_callback = combat_callback
+        self.callbacks = callbacks
 
     def read_line(self, line: str):
         super().read_line(line)
 
         if "GameState" not in line:
+            return
+
+        if "tag=MULLIGAN_STATE value=INPUT" in line:
+            self.callbacks.get("choose_hero", do_nothing)(self)
+            return
+
+        if "GameState.DebugPrintOptions() - id=" in line:
+            self.callbacks.get("idle", do_nothing)(self)
             return
 
         if not self.combat and re.search(REROLL_BUTTON_REMOVED, line):
@@ -30,7 +42,7 @@ class BattlegroundParser(LogParser):
 
         self.combat = False
 
-        self.combat_callback(self)
+        self.callbacks.get("combat", do_nothing)(self)
 
     def export_game(self) -> SimulatorExporter.game_class:
         exporter = SimulatorExporter(self.games[-1])

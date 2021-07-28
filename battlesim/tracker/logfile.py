@@ -6,7 +6,7 @@ def follow(filepath):
     while not os.path.exists(filepath):
         time.sleep(0.1)
 
-    with open(filepath) as file:
+    with open(filepath, encoding="utf-8") as file:
         while True:
             line = file.readline()
             if not line:

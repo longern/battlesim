@@ -36,9 +36,11 @@ class Entity:
 
 
 class Game(Entity):
+    turn: int
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.entities = {}
+        self.entities: Dict[int, Entity] = {}
         self.dispatcher = defaultdict(list)
         self.to_check_death: List[Card] = []
         self.max_entity_id = 1
@@ -98,6 +100,10 @@ def infer_child_card_id(parent_id: str) -> str:
 
 
 class Card(Entity):
+    controller: int
+    cardtype: CardType
+    zone: Zone
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if getattr(self, "cardtype", None) == CardType.MINION:
