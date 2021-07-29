@@ -35,14 +35,14 @@ def buy_minion(index: int, total: int):
     # Drag minion to hero
     offset = index + (1 - total) / 2
     pyautogui.moveTo(**get_minion_position(offset, enemy=True))
-    pyautogui.dragTo(duration=1, **get_hero_position())
+    pyautogui.dragTo(duration=1, button="left", **get_hero_position())
 
 
 def sell_minion(index: int, total: int):
     # Drag minion to bob
     offset = index + (1 - total) / 2
     pyautogui.moveTo(**get_minion_position(offset))
-    pyautogui.dragTo(duration=1, **get_hero_position(enemy=False))
+    pyautogui.dragTo(duration=1, button="left", **get_hero_position(enemy=True))
 
 
 def play_card(index: int, total: int):
