@@ -18,4 +18,4 @@ def test_rat_pack():
 
 
 def test_soul_juggler():
-    assert battle(parse_battlefield((["LOOT_013", "BGS_002"], [(4, 8)]))) == 0
+    assert battle(parse_battlefield((["LOOT_013", "BGS_002"], [(5, 8)]))) == 0
