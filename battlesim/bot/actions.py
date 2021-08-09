@@ -1,3 +1,5 @@
+import logging
+
 try:
     import pyautogui
 except KeyError:  # No GUI
@@ -33,32 +35,42 @@ def choose_hero(index: int):
 
 def buy_minion(index: int, total: int):
     # Drag minion to hero
+    logging.info("Buy minion %d in %d minions", index, total)
     offset = index + (1 - total) / 2
-    pyautogui.moveTo(**get_minion_position(offset, enemy=True))
+    pyautogui.moveTo(duration=1, **get_minion_position(offset, enemy=True))
     pyautogui.dragTo(duration=1, button="left", **get_hero_position())
 
 
 def sell_minion(index: int, total: int):
     # Drag minion to bob
+    logging.info("Sell minion %d in %d minions", index, total)
     offset = index + (1 - total) / 2
-    pyautogui.moveTo(**get_minion_position(offset))
+    pyautogui.moveTo(duration=1, **get_minion_position(offset))
     pyautogui.dragTo(duration=1, button="left", **get_hero_position(enemy=True))
 
 
 def play_card(index: int, total: int):
+    pyautogui.moveTo(x=920, y=1000, duration=1)
+    pyautogui.dragTo(duration=1, button="left", **get_minion_position(0, enemy=False))
+
+
+def choose(index: int, total: int):
     pass
 
 
 def tier_up():
-    pyautogui.click(x=800, y=200)
+    logging.info("Tier up")
+    pyautogui.click(x=800, y=200, duration=1)
 
 
 def refresh():
-    pyautogui.click(x=1130, y=200)
+    logging.info("Refresh")
+    pyautogui.click(x=1130, y=200, duration=1)
 
 
 def freeze():
-    pyautogui.click(x=1250, y=200)
+    logging.info("Freeze")
+    pyautogui.click(x=1250, y=200, duration=1)
 
 
 def use_hero_power():

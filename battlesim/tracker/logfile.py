@@ -1,18 +1,25 @@
 import os
 import time
+import asyncio
 
 
-def follow(filepath):
-    while not os.path.exists(filepath):
-        time.sleep(0.1)
+class LogStream:
+    def __init__(self, filepath):
+        self.filepath = filepath
+        self.last_line = False
 
-    with open(filepath, encoding="utf-8") as file:
-        while True:
-            line = file.readline()
-            if not line:
-                time.sleep(0.1)  # Sleep briefly
-                continue
-            yield line
+    def __iter__(self):
+        while not os.path.exists(self.filepath):
+            time.sleep(0.1)
+
+        with open(self.filepath, encoding="utf-8") as file:
+            while True:
+                line = file.readline()
+                if not line:
+                    self.last_line = True
+                    time.sleep(0.1)  # Sleep briefly
+                    continue
+                yield line
 
 
 def get_log_path():
