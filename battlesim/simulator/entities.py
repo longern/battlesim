@@ -29,6 +29,13 @@ def pick_attacked_target(minions):
 
 
 class Entity:
+    game: "Game"
+
+    atk = 0
+    cardtype = CardType.INVALID
+    health: int
+    temp_resources = 0
+
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             if not callable(getattr(self, key, None)) or not value:
@@ -53,7 +60,7 @@ class Game(Entity):
         return [
             entity
             for entity in self.entities.values()
-            if getattr(entity, "cardtype", None) == CardType.PLAYER
+            if entity.cardtype == CardType.PLAYER
         ]
 
     def register_entity(self, entity: Entity):
@@ -70,7 +77,7 @@ class Player(Entity):
     def minions(self):
         return sorted(
             filter(
-                lambda entity: getattr(entity, "cardtype", None) == CardType.MINION
+                lambda entity: entity.cardtype == CardType.MINION
                 and entity.zone == Zone.PLAY
                 and entity.controller == self.player_id,
                 self.game.entities.values(),
@@ -101,16 +108,17 @@ def infer_child_card_id(parent_id: str) -> str:
 
 class Card(Entity):
     controller: int
-    cardtype: CardType
+    divine_shield = False
+    poisonous = False
+    reborn = False
+    taunt = False
     zone: Zone
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        if getattr(self, "cardtype", None) == CardType.MINION:
+        if self.cardtype == CardType.MINION:
             self.damage = 0
-            self.divine_shield = getattr(self, "divine_shield", False)
             self.num_attacks_this_turn = 0
-            self.taunt = getattr(self, "taunt", False)
             self.to_be_destroyed = False
 
             if kwargs.get("start_with_1_health", False):
@@ -172,7 +180,7 @@ class Card(Entity):
         ):
             self.overkill()
 
-        if isinstance(self, Card) and getattr(self, "poisonous", False):
+        if isinstance(self, Card) and self.poisonous:
             card.to_be_destroyed = True
 
         if card.health <= card.damage or card.to_be_destroyed:
@@ -185,7 +193,7 @@ class Card(Entity):
     @register_action
     def die(self):
         self.trigger("Deathrattle")
-        if getattr(self, "reborn", False):
+        if self.reborn:
             new_card = Card.fromid(
                 self.game, self.card_id, start_with_1_health=1, reborn=False
             )
