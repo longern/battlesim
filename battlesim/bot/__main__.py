@@ -89,6 +89,9 @@ def idle_callback(parser: BattlegroundParser):
                 break
             time.sleep(0.5)
 
+        if turn == 1:
+            time.sleep(5)
+
     if len(cards_in_hand) and len(minions_in_battlefield) < 7:
         play_card(0, len(cards_in_hand))
         return
