@@ -108,6 +108,14 @@ def idle_callback(parser: BattlegroundParser):
             range(len((minions_in_tavern))),
             key=lambda index: getattr(minions_in_tavern[index], "tech_level", 1),
         )
+        if turn == 1:
+            priority = ["EX1_506", "BGS_115", "CFM_315"]
+            minion_to_buy = max(
+                range(len((minions_in_tavern))),
+                key=lambda index: priority.index(minions_in_tavern[index].card_id)
+                if minions_in_tavern[index].card_id in priority
+                else -1,
+            )
         buy_minion(minion_to_buy, len(minions_in_tavern))
         return
 
