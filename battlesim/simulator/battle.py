@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import random
-from collections import defaultdict
+from collections import Counter
 from itertools import cycle
 
 from hearthstone.cardxml import load
@@ -108,3 +108,12 @@ def parse_battlefield(player_minions_stats) -> Game:
                     )
 
     return game
+
+
+def calculate_winrate(friendly_minions, enemy_minions, repeats=1000):
+    result_counter = Counter({-1: 0, 0: 0, 1: 0})
+    for _ in range(repeats):
+        result = battle(parse_battlefield((friendly_minions, enemy_minions)))
+        result_counter[result] += 1
+
+    return {key: value / repeats for key, value in result_counter.items()}
