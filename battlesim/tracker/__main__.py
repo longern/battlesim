@@ -6,7 +6,7 @@ from hearthstone import enums
 from hearthstone.cardxml import load
 
 from ..simulator.battle import battle
-from .logfile import follow, get_log_path
+from .logfile import LogStream, get_log_path
 from .parser import BattlegroundParser
 
 db, _ = load(locale="zhCN")
@@ -43,7 +43,7 @@ def combat_callback(parser: BattlegroundParser):
 
 def main():
     parser = BattlegroundParser({"combat": combat_callback})
-    parser.read(follow(get_log_path()))
+    parser.read(LogStream(get_log_path()))
 
 
 if __name__ == "__main__":
