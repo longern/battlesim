@@ -1,13 +1,14 @@
-from battlesim.tracker.exporter import SimulatorExporter
 import logging
 import os
 import time
 
 import pyautogui
-from PIL.Image import Image
-from battlesim.bot.actions import tier_up
 from hearthstone.cardxml import load
 from hearthstone.enums import CardType, Zone
+from PIL.Image import Image
+
+from battlesim.bot.actions import tier_up
+from battlesim.tracker.exporter import SimulatorExporter
 
 from ..tracker.logfile import LogStream, get_log_path
 from ..tracker.parser import BattlegroundParser
@@ -106,7 +107,11 @@ def idle_callback(parser: BattlegroundParser):
     if coins_remained >= 3:
         minion_to_buy = max(
             range(len((minions_in_tavern))),
-            key=lambda index: getattr(minions_in_tavern[index], "tech_level", 1),
+            key=lambda index: (
+                getattr(minions_in_tavern[index], "tech_level", 1),
+                getattr(minions_in_tavern[index], "atk", 0)
+                * getattr(minions_in_tavern[index], "health", 0),
+            ),
         )
         if turn == 1:
             priority = ["EX1_506", "BGS_115", "CFM_315"]

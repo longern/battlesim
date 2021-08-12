@@ -1,6 +1,6 @@
+import asyncio
 import os
 import time
-import asyncio
 
 
 class LogStream:
