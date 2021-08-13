@@ -1,15 +1,16 @@
 from contextvars import ContextVar
 from functools import cached_property
-from typing import Dict, List
+from typing import TYPE_CHECKING, Dict, List
 
 from hearthstone.enums import CardType
 
-from .entity import Entity, Game, Player, Minion
+if TYPE_CHECKING:
+    from .entity import Entity, Game, Minion, Player
 
 
 class GameState:
     def __init__(self):
-        self.entities: Dict[int, "Entity"] = {}
+        self.entities: Dict[int, Entity] = {}
 
     def __repr__(self):
         from hearthstone.cardxml import load
@@ -30,7 +31,7 @@ class GameState:
 
         enemy_minions = self.players[1].minions
         state_repr += " ".join(map(minion_repr, enemy_minions))
-        
+
         return state_repr
 
     @classmethod
