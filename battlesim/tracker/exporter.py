@@ -3,7 +3,7 @@ from hslog.export import BaseExporter
 
 from ..simulator.entities import Card, Game, Player
 from ..simulator.entity import get
-from ..simulator.state import Entity, GameState
+from ..simulator.state import GameState
 
 
 class SimulatorExporter(BaseExporter):

@@ -35,17 +35,7 @@ def combat_callback(parser: BattlegroundParser):
     }
 
     g.set(gs)
-    game = gs.game
-    turn = game.turn // 2
     print(gs)
-
-    result_counter = Counter({1: 0, 0: 0, -1: 0})
-    for _ in range(1000):
-        result_counter[battle(deepcopy(game))] += 1
-
-    print(result_counter)
-
-    print(f"Combat of turn {turn} ends.")
 
 
 def main():

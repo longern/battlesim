@@ -10,14 +10,14 @@ if TYPE_CHECKING:
 
 class GameState:
     def __init__(self):
-        self.entities: Dict[int, Entity] = {}
+        self.entities: Dict[int, "Entity"] = {}
 
     def __repr__(self):
         from hearthstone.cardxml import load
 
         db, _ = load(locale=locale.get())
 
-        def minion_repr(card: Minion):
+        def minion_repr(card: "Minion"):
             return "%s%d/%d" % (
                 db[card.card_id].name,
                 card.atk,
@@ -39,7 +39,7 @@ class GameState:
         pass
 
     @cached_property
-    def game(self) -> Game:
+    def game(self) -> "Game":
         return next(
             entity
             for entity in self.entities.values()
@@ -47,7 +47,7 @@ class GameState:
         )
 
     @cached_property
-    def players(self) -> List[Player]:
+    def players(self) -> List["Player"]:
         return [
             entity
             for entity in self.entities.values()
@@ -57,11 +57,7 @@ class GameState:
     def to_pandas(self):
         import pandas as pd
 
-        return {
-            "game": pd.DataFrame.from_dict(vars(self.game)),
-            "players": pd.DataFrame([vars(player) for player in self.players.values()]),
-            "cards": pd.DataFrame([vars(entity) for entity in self.entities.values()]),
-        }
+        return pd.DataFrame([vars(entity) for entity in self.entities.values()])
 
 
 g: ContextVar[GameState] = ContextVar("g")

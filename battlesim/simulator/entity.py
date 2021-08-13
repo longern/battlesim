@@ -7,7 +7,7 @@ from .state import g
 
 
 class Entity:
-    cardtype: CardType
+    cardtype = CardType.INVALID
     controller: int
     entity_id: int
     zone: Zone
